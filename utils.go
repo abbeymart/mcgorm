@@ -117,25 +117,6 @@ func DataToValueParam(rec interface{}) (ActionParamType, error) {
 	}
 }
 
-func DataToValueParam2(rec interface{}) (ActionParamType, error) {
-	// validate recs as struct{} type
-	recType := fmt.Sprintf("%v", reflect.TypeOf(rec).Kind())
-	switch recType {
-	case "struct":
-		dataValue := ActionParamType{}
-		v := reflect.ValueOf(rec)
-		typeOfS := v.Type()
-
-		for i := 0; i < v.NumField(); i++ {
-			dataValue[govalidator.CamelCaseToUnderscore(typeOfS.Field(i).Name)] = v.Field(i).Interface()
-			//fmt.Printf("Field: %s\tValue: %v\n", typeOfS.Field(i).Name, v.Field(i).Interface())
-		}
-		return dataValue, nil
-	default:
-		return nil, errors.New(fmt.Sprintf("rec parameter must be of type struct{}"))
-	}
-}
-
 // StructToMap function converts struct to map
 func StructToMap(rec interface{}) (map[string]interface{}, error) {
 	var mapData map[string]interface{}
@@ -202,7 +183,7 @@ func StructToTagMap(rec interface{}, tag string) (map[string]interface{}, error)
 	return tagMapData, nil
 }
 
-// StructToCamelCaseMap StructToTagMap function converts struct to map (for crud-actionParams / records)
+// StructToCamelCaseMap converts struct to map (for crud-actionParams / records)
 func StructToCamelCaseMap(rec interface{}) (map[string]interface{}, error) {
 	// validate recs as struct{} type
 	recType := fmt.Sprintf("%v", reflect.TypeOf(rec).Kind())
@@ -225,7 +206,7 @@ func StructToCamelCaseMap(rec interface{}) (map[string]interface{}, error) {
 	return tagMapData, nil
 }
 
-// StructToFieldValues function converts struct/map to map (for DB columns and values)
+// StructToFieldValues converts struct/map to map (for DB columns and values)
 func StructToFieldValues(rec interface{}, tag string) ([]string, []interface{}, error) {
 	// validate recs as struct{} type
 	recType := fmt.Sprintf("%v", reflect.TypeOf(rec).Kind())
@@ -253,7 +234,7 @@ func StructToFieldValues(rec interface{}, tag string) ([]string, []interface{}, 
 	return tableFields, fieldValues, nil
 }
 
-// ArrayMapToStruct function converts []map to []struct
+// ArrayMapToStruct converts []map to []struct
 func ArrayMapToStruct(actParams ActionParamsType, recs interface{}) (interface{}, error) {
 	// validate recs as slice / []struct{} type
 	recsType := fmt.Sprintf("%v", reflect.TypeOf(recs).Kind())
@@ -291,7 +272,7 @@ func ArrayMapToStruct(actParams ActionParamsType, recs interface{}) (interface{}
 	return recs, nil
 }
 
-// MapToStruct function converts map to struct
+// MapToStruct converts map to struct
 func MapToStruct(actParam map[string]interface{}, rec interface{}) (interface{}, error) {
 	// validate recs as struct{} type
 	recType := fmt.Sprintf("%v", reflect.TypeOf(rec).Kind())
