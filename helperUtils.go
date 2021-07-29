@@ -33,6 +33,10 @@ func EmailUsername(loginName string) EmailUserNameType {
 
 }
 
+func TypeOf(rec interface{}) reflect.Type {
+	return reflect.TypeOf(rec)
+}
+
 func ParseRawValues(rawValues [][]byte) ([]interface{}, error) {
 	// variables
 	var v interface{}
@@ -90,21 +94,10 @@ func JsonDataETL(jsonRec []byte, rec interface{}) error {
 // DataToValueParam method accepts only a struct record/param (type/model) and returns the ActionParamType
 // data camel/Pascal-case keys are converted to underscore-keys to match table-field/columns specs
 func DataToValueParam(rec interface{}) (ActionParamType, error) {
-	dataValue := ActionParamType{}
-	v := reflect.ValueOf(rec)
-	typeOfS := v.Type()
-
-	for i := 0; i < v.NumField(); i++ {
-		dataValue[govalidator.CamelCaseToUnderscore(typeOfS.Field(i).Name)] = v.Field(i).Interface()
-		//fmt.Printf("Field: %s\tValue: %v\n", typeOfS.Field(i).Name, v.Field(i).Interface())
-	}
-	return dataValue, nil
-}
-
-func DataToValueParam2(rec interface{}) (ActionParamType, error) {
-
-	switch rec.(type) {
-	case struct{}:
+	// validate recs as struct{} type
+	recType := fmt.Sprintf("%v", reflect.TypeOf(rec).Kind())
+	switch recType {
+	case "struct":
 		dataValue := ActionParamType{}
 		v := reflect.ValueOf(rec)
 		typeOfS := v.Type()
@@ -115,7 +108,26 @@ func DataToValueParam2(rec interface{}) (ActionParamType, error) {
 		}
 		return dataValue, nil
 	default:
-		return nil, errors.New("invalid type - requires parameter of type struct only")
+		return nil, errors.New(fmt.Sprintf("rec parameter must be of type struct{}"))
+	}
+}
+
+func DataToValueParam2(rec interface{}) (ActionParamType, error) {
+	// validate recs as struct{} type
+	recType := fmt.Sprintf("%v", reflect.TypeOf(rec).Kind())
+	switch recType {
+	case "struct":
+		dataValue := ActionParamType{}
+		v := reflect.ValueOf(rec)
+		typeOfS := v.Type()
+
+		for i := 0; i < v.NumField(); i++ {
+			dataValue[govalidator.CamelCaseToUnderscore(typeOfS.Field(i).Name)] = v.Field(i).Interface()
+			//fmt.Printf("Field: %s\tValue: %v\n", typeOfS.Field(i).Name, v.Field(i).Interface())
+		}
+		return dataValue, nil
+	default:
+		return nil, errors.New(fmt.Sprintf("rec parameter must be of type struct{}"))
 	}
 }
 
@@ -137,7 +149,14 @@ func StructToMap(rec interface{}) (map[string]interface{}, error) {
 
 // TagField return the field-tag (e.g. table-column-name) for mcorm tag
 func TagField(rec interface{}, fieldName string, tag string) (string, error) {
-	// TODO: validate rec as struct{}
+	// validate recs as struct{} type
+	recType := fmt.Sprintf("%v", reflect.TypeOf(rec).Kind())
+	switch recType {
+	case "struct":
+		break
+	default:
+		return "", errors.New(fmt.Sprintf("rec parameter must be of type struct{}"))
+	}
 	t := reflect.TypeOf(rec)
 	// convert the first-letter to upper-case (public field)
 	field, found := t.FieldByName(strings.Title(fieldName))
@@ -154,6 +173,14 @@ func TagField(rec interface{}, fieldName string, tag string) (string, error) {
 
 // StructToTagMap function converts struct to map (for crud-actionParams / records)
 func StructToTagMap(rec interface{}, tag string) (map[string]interface{}, error) {
+	// validate recs as struct{} type
+	recType := fmt.Sprintf("%v", reflect.TypeOf(rec).Kind())
+	switch recType {
+	case "struct":
+		break
+	default:
+		return nil, errors.New(fmt.Sprintf("rec parameter must be of type struct{}"))
+	}
 	tagMapData := map[string]interface{}{}
 	mapData, err := StructToMap(rec)
 	if err != nil {
@@ -172,6 +199,15 @@ func StructToTagMap(rec interface{}, tag string) (map[string]interface{}, error)
 
 // StructToCamelCaseMap StructToTagMap function converts struct to map (for crud-actionParams / records)
 func StructToCamelCaseMap(rec interface{}) (map[string]interface{}, error) {
+	// validate recs as struct{} type
+	recType := fmt.Sprintf("%v", reflect.TypeOf(rec).Kind())
+	switch recType {
+	case "struct":
+		break
+	default:
+		return nil, errors.New(fmt.Sprintf("rec parameter must be of type struct{}"))
+	}
+
 	tagMapData := map[string]interface{}{}
 	mapData, err := StructToMap(rec)
 	if err != nil {
@@ -186,6 +222,14 @@ func StructToCamelCaseMap(rec interface{}) (map[string]interface{}, error) {
 
 // StructToFieldValues function converts struct/map to map (for DB columns and values)
 func StructToFieldValues(rec interface{}, tag string) ([]string, []interface{}, error) {
+	// validate recs as struct{} type
+	recType := fmt.Sprintf("%v", reflect.TypeOf(rec).Kind())
+	switch recType {
+	case "struct":
+		break
+	default:
+		return nil, nil, errors.New(fmt.Sprintf("rec parameter must be of type struct{}"))
+	}
 	var tableFields []string
 	var fieldValues []interface{}
 	mapDataValue, err := StructToMap(rec)
@@ -206,12 +250,28 @@ func StructToFieldValues(rec interface{}, tag string) ([]string, []interface{}, 
 
 // ArrayMapToStruct function converts []map to []struct
 func ArrayMapToStruct(actParams ActionParamsType, recs interface{}) (interface{}, error) {
-	// validate recs as []struct{} type, optional
-	switch recs.(type) {
-	case []struct{}:
+	// validate recs as slice / []struct{} type
+	recsType := fmt.Sprintf("%v", reflect.TypeOf(recs).Kind())
+	switch recsType {
+	case "slice":
 		break
 	default:
-		return nil, errors.New(fmt.Sprintf("recs parameters must be of type []struct{}"))
+		return nil, errors.New(fmt.Sprintf("recs parameter must be of type []struct{}: %v", recsType))
+	}
+	switch rType := recs.(type) {
+	case []interface{}:
+		for i, val := range rType {
+			recType := fmt.Sprintf("%v", reflect.TypeOf(val).Kind())
+			switch recType {
+			case "struct":
+				break
+			default:
+				return nil, errors.New(fmt.Sprintf("recs[%v] parameter must be of type struct{}: %v", i, recType))
+			}
+		}
+	default:
+		fmt.Printf("recs-type: %v : %v", rType)
+		return nil, errors.New(fmt.Sprintf("rec parameter must be of type []struct{}: %v", rType))
 	}
 	// compute json records from actParams
 	jsonRec, err := json.Marshal(actParams)
@@ -229,8 +289,9 @@ func ArrayMapToStruct(actParams ActionParamsType, recs interface{}) (interface{}
 // MapToStruct function converts map to struct
 func MapToStruct(actParam map[string]interface{}, rec interface{}) (interface{}, error) {
 	// validate recs as struct{} type
-	switch rec.(type) {
-	case struct{}:
+	recType := fmt.Sprintf("%v", reflect.TypeOf(rec).Kind())
+	switch recType {
+	case "struct":
 		break
 	default:
 		return nil, errors.New(fmt.Sprintf("rec parameter must be of type struct{}"))

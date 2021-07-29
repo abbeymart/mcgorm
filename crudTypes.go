@@ -12,6 +12,47 @@ import (
 	"gorm.io/gorm"
 )
 
+type DbConnectionType *sql.DB
+
+type DbSecureType struct {
+	SecureAccess bool   `json:"secureAccess"`
+	SecureCert   string `json:"secureCert"`
+	SecureKey    string `json:"secureKey"`
+	SslMode      string `json:"sslMode"`
+}
+
+type DbConfigType struct {
+	Host         string       `json:"host"`
+	Username     string       `json:"username"`
+	Password     string       `json:"password"`
+	DbName       string       `json:"dbName"`
+	Filename     string       `json:"filename"`
+	Location     string       `json:"location"`
+	Port         uint32       `json:"port"`
+	DbType       string       `json:"dbType"`
+	PoolSize     uint         `json:"poolSize"`
+	Url          string       `json:"url"`
+	SecureOption DbSecureType `json:"secureOption"`
+}
+
+type DbConnectOptions map[string]interface{}
+
+type DbConfig struct {
+	DbType       string           `json:"dbType"`
+	Host         string           `json:"host"`
+	Username     string           `json:"username"`
+	Password     string           `json:"password"`
+	DbName       string           `json:"dbName"`
+	Filename     string           `json:"filename"`
+	Location     string           `json:"location"`
+	Port         uint32           `json:"port"`
+	PoolSize     uint             `json:"poolSize"`
+	Url          string           `json:"url"`
+	Timezone     string           `json:"timezone"`
+	SecureOption DbSecureType     `json:"secureOption"`
+	Options      DbConnectOptions `json:"options"`
+}
+
 type CrudTasksType struct {
 	Create string
 	Insert string
@@ -63,6 +104,7 @@ type CheckAccessType struct {
 
 type CheckAccessParamsType struct {
 	AccessDb     *pgxpool.Pool `json:"accessDb"`
+	AccessGormDb *gorm.DB      `json:"accessGormDb"`
 	UserInfo     UserInfoType  `json:"userInfo"`
 	TableName    string        `json:"tableName"`
 	RecordIds    []string      `json:"recordIds"` // for update, delete and read tasks
@@ -360,45 +402,4 @@ type SaveResultType struct {
 	RecordsCount int
 	TaskType     string
 	LogRes       mcresponse.ResponseMessage
-}
-
-type DbConnectionType *sql.DB
-
-type DbSecureType struct {
-	SecureAccess bool   `json:"secureAccess"`
-	SecureCert   string `json:"secureCert"`
-	SecureKey    string `json:"secureKey"`
-	SslMode      string `json:"sslMode"`
-}
-
-type DbConfigType struct {
-	Host         string       `json:"host"`
-	Username     string       `json:"username"`
-	Password     string       `json:"password"`
-	DbName       string       `json:"dbName"`
-	Filename     string       `json:"filename"`
-	Location     string       `json:"location"`
-	Port         uint32       `json:"port"`
-	DbType       string       `json:"dbType"`
-	PoolSize     uint         `json:"poolSize"`
-	Url          string       `json:"url"`
-	SecureOption DbSecureType `json:"secureOption"`
-}
-
-type DbConnectOptions map[string]interface{}
-
-type DbConfig struct {
-	DbType       string           `json:"dbType"`
-	Host         string           `json:"host"`
-	Username     string           `json:"username"`
-	Password     string           `json:"password"`
-	DbName       string           `json:"dbName"`
-	Filename     string           `json:"filename"`
-	Location     string           `json:"location"`
-	Port         uint32           `json:"port"`
-	PoolSize     uint             `json:"poolSize"`
-	Url          string           `json:"url"`
-	TimeZone     string           `json:"timeZone"`
-	SecureOption DbSecureType     `json:"secureOption"`
-	Options      DbConnectOptions `json:"options"`
 }
