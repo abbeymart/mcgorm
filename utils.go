@@ -2,7 +2,7 @@
 // @Company: mConnect.biz | @License: MIT
 // @Description: go: mConnect
 
-package dbcrud
+package mcgorm
 
 import (
 	"encoding/json"
@@ -183,8 +183,8 @@ func StructToTagMap(rec interface{}, tag string) (map[string]interface{}, error)
 	return tagMapData, nil
 }
 
-// StructToCamelCaseMap converts struct to map (for crud-actionParams / records)
-func StructToCamelCaseMap(rec interface{}) (map[string]interface{}, error) {
+// StructToCaseUnderscoreMap converts struct to map (for crud-actionParams / records)
+func StructToCaseUnderscoreMap(rec interface{}) (map[string]interface{}, error) {
 	// validate recs as struct{} type
 	recType := fmt.Sprintf("%v", reflect.TypeOf(rec).Kind())
 	switch recType {
@@ -194,16 +194,16 @@ func StructToCamelCaseMap(rec interface{}) (map[string]interface{}, error) {
 		return nil, errors.New(fmt.Sprintf("rec parameter must be of type struct{}"))
 	}
 
-	tagMapData := map[string]interface{}{}
+	caseUnderscoreMapData := map[string]interface{}{}
 	mapData, err := StructToMap(rec)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("error computing struct to map: %v", err.Error()))
 	}
-	// compose tagMapData
+	// compose caseUnderscoreMapData
 	for key, val := range mapData {
-		tagMapData[govalidator.CamelCaseToUnderscore(key)] = val
+		caseUnderscoreMapData[govalidator.CamelCaseToUnderscore(key)] = val
 	}
-	return tagMapData, nil
+	return caseUnderscoreMapData, nil
 }
 
 // StructToFieldValues converts struct to record fields and associated values (columns and values)

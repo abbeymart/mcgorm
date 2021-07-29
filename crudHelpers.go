@@ -2,7 +2,7 @@
 // @Company: mConnect.biz | @License: MIT
 // @Description: crud-helper methods
 
-package dbcrud
+package mcgorm
 
 import (
 	"fmt"

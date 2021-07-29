@@ -2,7 +2,7 @@
 // @Company: mConnect.biz | @License: MIT
 // @Description: go: mConnect - deleteRecord
 
-package dbcrud
+package mcgorm
 
 import (
 	"fmt"

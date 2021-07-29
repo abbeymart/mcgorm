@@ -2,7 +2,7 @@
 // @Company: mConnect.biz | @License: MIT
 // @Description: crud - access control methods
 
-package dbcrud
+package mcgorm
 
 import (
 	"context"

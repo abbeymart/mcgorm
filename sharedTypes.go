@@ -2,7 +2,7 @@
 // @Company: mConnect.biz | @License: MIT
 // @Description: go: mConnect
 
-package dbcrud
+package mcgorm
 
 import (
 	"gorm.io/gorm"

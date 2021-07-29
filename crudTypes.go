@@ -2,7 +2,7 @@
 // @Company: mConnect.biz | @License: MIT
 // @Description: crud operations' types - updated
 
-package dbcrud
+package mcgorm
 
 import (
 	"database/sql"
@@ -120,27 +120,16 @@ type FieldValueType interface{}
 type ActionParamType map[string]interface{}
 type ValueToDataType map[string]interface{}
 type ActionParamsType []ActionParamType
-type ExistParamType map[string]interface{}
-type ExistParamsType []ExistParamType
-
 type SortParamType map[string]int     // 1 for "asc", -1 for "desc
 type ProjectParamType map[string]bool // 1 or true for inclusion, 0 or false for exclusion
-
-type QueryItemType struct {
-	GroupItem      map[string]map[string]interface{} `json:"groupItem"`      // key1 => fieldName, key2 => fieldOperator, interface{}=> value(s)
-	GroupItemOrder int                               `json:"groupItemOrder"` // item/field order within the group
-	GroupItemOp    string                            `json:"groupItemOp"`    // group-item relationship to the next item (AND, OR), the last item groupItemOp should be "" or will be ignored
-}
-
-type QueryGroupType struct {
-	GroupName   string          `json:"groupName"`   // for group-items(fields) categorization
-	GroupItems  []QueryItemType `json:"groupItems"`  // group items to be composed by category
-	GroupOrder  int             `json:"groupOrder"`  // group order
-	GroupLinkOp string          `json:"groupLinkOp"` // group relationship to the next group (AND, OR), the last group groupLinkOp should be "" or will be ignored
-}
-
 type QueryParamType map[string]interface{}
-type WhereParamType map[string]interface{}
+
+type QueryParamItemType struct {
+	Query    QueryParamType `json:"query"`
+	Order    int            `json:"order"`    // order
+	Operator string         `json:"operator"` // relationship to the next group (AND, OR), the last group-operator is "" or ignored
+}
+type QueryParamsType []QueryParamItemType
 
 // CrudParamsType is the struct type for receiving, composing and passing CRUD inputs
 type CrudParamsType struct {
@@ -149,7 +138,6 @@ type CrudParamsType struct {
 	TableName     string           `json:"-"`
 	UserInfo      UserInfoType     `json:"userInfo"`
 	ActionParams  ActionParamsType `json:"actionParams"`
-	ExistParams   ExistParamsType  `json:"existParams"`
 	QueryParams   QueryParamType   `json:"queryParams"`
 	RecordIds     []string         `json:"recordIds"`
 	ProjectParams ProjectParamType `json:"projectParams"`
@@ -162,9 +150,6 @@ type CrudParamsType struct {
 }
 
 type CrudOptionsType struct {
-	ParentTables          []string
-	ChildTables           []string
-	RecursiveDelete       bool
 	CheckAccess           bool
 	AccessDb              *pgxpool.Pool
 	AuditDb               *pgxpool.Pool
@@ -196,56 +181,6 @@ type CrudOptionsType struct {
 	MsgFrom               string
 }
 
-type CrudParamType struct {
-	AppDb           *pgxpool.Pool // use *pgxpool.Pool, preferred || *pgx.Conn
-	TableName       string
-	Token           string
-	UserInfo        UserInfoType
-	UserId          string
-	Group           string
-	Groups          []string
-	RecordIds       []string
-	ActionParams    ActionParamsType
-	QueryParams     QueryParamType
-	ExistParams     ExistParamsType
-	ProjectParams   ProjectParamType
-	SortParams      SortParamType
-	Skip            int
-	Limit           int
-	ParentTables    []string
-	ChildTables     []string
-	RecursiveDelete bool
-	CheckAccess     bool
-	AccessDb        *pgxpool.Pool
-	AuditDb         *pgxpool.Pool
-	AuditTable      string
-	ServiceTable    string
-	UserTable       string
-	ProfileTable    string
-	RoleTable       string
-	AccessTable     string
-	MaxQueryLimit   int
-	logCrud         bool
-	LogCreate       bool
-	LogUpdate       bool
-	LogRead         bool
-	LogDelete       bool
-	//transLog AuditLog
-	HashKey             string
-	IsRecExist          bool
-	ActionAuthorized    bool
-	UnAuthorizedMessage string
-	RecExistMessage     string
-	IsAdmin             bool
-	CreateItems         ActionParamsType
-	UpdateItems         ActionParamsType
-	CurrentRecs         ActionParamsType
-	RoleServices        []RoleServiceType
-	SubItems            []bool
-	CacheExpire         int
-	Params              CrudParamsType
-}
-
 type MessageObject map[string]string
 
 type ValidateResponseType struct {
@@ -254,87 +189,6 @@ type ValidateResponseType struct {
 }
 type OkResponse struct {
 	Ok bool `json:"ok"`
-}
-
-// CRUD operations
-
-type CreateQueryResponseType struct {
-	CreateQuery string
-	FieldNames  []string
-	FieldValues [][]interface{}
-}
-
-type UpdateQueryResponseType struct {
-	UpdateQuery string
-	WhereQuery  string
-	FieldValues []interface{}
-}
-
-type WhereQueryResponseType struct {
-	WhereQuery  string
-	FieldValues []interface{}
-}
-
-type DeleteQueryResponseType struct {
-	DeleteQuery string
-	WhereQuery  string
-	FieldValues []interface{}
-}
-
-type SelectQueryResponseType struct {
-	SelectQuery string
-	WhereQuery  string
-	FieldValues []interface{}
-}
-
-type SaveParamsType struct {
-	UserInfo    UserInfoType   `json:"userInfo"`
-	QueryParams QueryParamType `json:"queryParams"`
-	RecordIds   []string       `json:"recordIds"`
-	TaskType    string         `json:"taskType"`
-	//ActionParams ActionParamsType `json:"actionParams"`
-}
-
-type DeleteParamsType struct {
-	UserInfo    UserInfoType   `json:"userInfo"`
-	RecordIds   []string       `json:"recordIds"`
-	QueryParams QueryParamType `json:"queryParams"`
-}
-
-type GetParamsType struct {
-	UserInfo     UserInfoType     `json:"userInfo"`
-	Skip         int              `json:"skip"`
-	Limit        int              `json:"limit"`
-	RecordIds    []string         `json:"recordIds"`
-	QueryParams  QueryParamType   `json:"queryParams"`
-	SortParam    SortParamType    `json:"sortParams"`
-	ProjectParam ProjectParamType `json:"projectParam"`
-}
-
-type SaveCrudParamsType struct {
-	CrudParams         CrudParamsType
-	CrudOptions        CrudOptionsType
-	CreateTableFields  []string
-	UpdateTableFields  []string
-	GetTableFields     []string
-	TableFieldPointers []interface{}
-	AuditLog           bool
-}
-
-type DeleteCrudParamsType struct {
-	CrudParams         CrudParamsType
-	CrudOptions        CrudOptionsType
-	GetTableFields     []string
-	TableFieldPointers []interface{}
-	AuditLog           bool
-}
-
-type GetCrudParamsType struct {
-	CrudParams         CrudParamsType
-	CrudOptions        CrudOptionsType
-	GetTableFields     []string
-	TableFieldPointers []interface{}
-	AuditLog           bool
 }
 
 // ErrorType provides the structure for error reporting
@@ -361,25 +215,20 @@ func (err ErrorType) Error() string {
 	return fmt.Sprintf("Error-code: %v | Error-message: %v", err.Code, err.Message)
 }
 
-type TaskResultType struct {
-	QueryParam   WhereParamType `json:"query_param"`
-	RecordIds    []string       `json:"record_ids"`
-	RecordCount  int            `json:"record_count"`
-	TableRecords []interface{}  `json:"table_records"`
-}
-
 type LogRecordsType struct {
 	TableFields  []string       `json:"table_fields"`
 	TableRecords []interface{}  `json:"table_records"`
-	QueryParam   WhereParamType `json:"query_param"`
+	QueryParam   QueryParamType `json:"query_param"`
 	RecordIds    []string       `json:"record_ids"`
 }
 
 type CrudResultType struct {
-	QueryParam   QueryParamType `json:"queryParam"`
-	RecordIds    []string       `json:"recordIds"`
-	RecordCount  int            `json:"recordCount"`
-	TableRecords []interface{}  `json:"tableRecords"`
+	QueryParam   QueryParamType             `json:"queryParam"`
+	RecordIds    []string                   `json:"recordIds"`
+	RecordCount  int                        `json:"recordCount"`
+	TableRecords []interface{}              `json:"tableRecords"`
+	TaskType     string                     `json:"taskType"`
+	LogRes       mcresponse.ResponseMessage `json:"logRes"`
 }
 
 type GetStatType struct {
@@ -392,14 +241,16 @@ type GetStatType struct {
 }
 
 type GetResultType struct {
-	Records []map[string]interface{} `json:"value"`
-	Stats   GetStatType              `json:"stats"`
+	Records  []map[string]interface{}   `json:"value"`
+	Stats    GetStatType                `json:"stats"`
+	TaskType string                     `json:"taskType"`
+	LogRes   mcresponse.ResponseMessage `json:"logRes"`
 }
 
 type SaveResultType struct {
-	QueryParam   QueryParamType
-	RecordIds    []string
-	RecordsCount int
-	TaskType     string
-	LogRes       mcresponse.ResponseMessage
+	QueryParam   QueryParamType             `json:"queryParam"`
+	RecordIds    []string                   `json:"recordIds"`
+	RecordsCount int                        `json:"recordsCount"`
+	TaskType     string                     `json:"taskType"`
+	LogRes       mcresponse.ResponseMessage `json:"logRes"`
 }

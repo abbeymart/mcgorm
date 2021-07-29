@@ -2,7 +2,7 @@
 // @Company: mConnect.biz | @License: MIT
 // @Description: crud - instance and methods
 
-package dbcrud
+package mcgorm
 
 import (
 	"encoding/json"
@@ -32,7 +32,6 @@ func NewCrud(params CrudParamsType, options CrudOptionsType) (crudInstance *Crud
 	crudInstance.QueryParams = params.QueryParams
 	crudInstance.SortParams = params.SortParams
 	crudInstance.ProjectParams = params.ProjectParams
-	crudInstance.ExistParams = params.ExistParams
 	crudInstance.Token = params.Token
 	crudInstance.TaskName = params.TaskName
 	crudInstance.Skip = params.Skip

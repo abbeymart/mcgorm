@@ -2,7 +2,7 @@
 // @Company: mConnect.biz | @License: MIT
 // @Description: go: mConnect - saveRecord
 
-package dbcrud
+package mcgorm
 
 import (
 	"fmt"
@@ -78,7 +78,7 @@ func (crud Crud) UpdateById(model interface{}, rec interface{}, id string) mcres
 		getRes = crud.GetById(model, id)
 	}
 	// convert struct to map to save all fields (including zero-value fields)
-	mapRec, err := StructToCamelCaseMap(rec)
+	mapRec, err := StructToCaseUnderscoreMap(rec)
 	if err != nil {
 		return mcresponse.GetResMessage("updateError",
 			mcresponse.ResponseMessageOptions{
@@ -136,7 +136,7 @@ func (crud Crud) UpdateByIds(model interface{}, rec interface{}) mcresponse.Resp
 		getRes = crud.GetByIds(model)
 	}
 	// convert struct to map to save all fields (including zero-value fields)
-	mapRec, err := StructToCamelCaseMap(rec)
+	mapRec, err := StructToCaseUnderscoreMap(rec)
 	if err != nil {
 		return mcresponse.GetResMessage("updateError",
 			mcresponse.ResponseMessageOptions{
@@ -194,7 +194,7 @@ func (crud Crud) UpdateByParam(model interface{}, rec interface{}) mcresponse.Re
 		getRes = crud.GetByParam(model)
 	}
 	// convert struct to map to save all fields (including zero-value fields)
-	mapRec, err := StructToCamelCaseMap(rec)
+	mapRec, err := StructToCaseUnderscoreMap(rec)
 	if err != nil {
 		return mcresponse.GetResMessage("updateError",
 			mcresponse.ResponseMessageOptions{
@@ -260,7 +260,7 @@ func (crud Crud) Update(model interface{}, recs interface{}) mcresponse.Response
 	resultCount := 0
 	for _, record := range recs.([]interface{}) {
 		// convert struct to map to save all fields (including zero-value fields)
-		mapRec, err := StructToCamelCaseMap(record)
+		mapRec, err := StructToCaseUnderscoreMap(record)
 		if err != nil {
 			return mcresponse.GetResMessage("updateError",
 				mcresponse.ResponseMessageOptions{

@@ -2,7 +2,7 @@
 // @Company: mConnect.biz | @License: MIT
 // @Description: go: mConnect - getRecord
 
-package dbcrud
+package mcgorm
 
 import (
 	"encoding/json"

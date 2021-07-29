@@ -2,7 +2,7 @@
 // @Company: mConnect.biz | @License: MIT
 // @Description: go: mConnect
 
-package dbcrud
+package mcgorm
 
 import (
 	"fmt"
@@ -16,7 +16,8 @@ func GormDb(dbConfig DbConfig) (db *gorm.DB, err error) {
 	if sslMode == "" {
 		sslMode = "disable"
 	}
-	dsn := fmt.Sprintf("port=%d host=%s user=%s password=%s dbname=%s sslmode=%v sslrootcert=%v TimeZone=%v", dbConfig.Port, dbConfig.Host, dbConfig.Username, dbConfig.Password, dbConfig.DbName, sslMode, sslCert, dbConfig.Timezone)
+	dsn := fmt.Sprintf(`port=%d host=%s user=%s password=%s dbname=%s sslmode=%v sslrootcert=%v TimeZone=%v`,
+		dbConfig.Port, dbConfig.Host, dbConfig.Username, dbConfig.Password, dbConfig.DbName, sslMode, sslCert, dbConfig.Timezone)
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
 		CreateBatchSize: 1000,
 	})

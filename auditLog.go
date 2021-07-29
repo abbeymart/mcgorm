@@ -2,7 +2,7 @@
 // @Company: mConnect.biz | @License: MIT
 // @Description: go: mConnect Audit Log
 
-package dbcrud
+package mcgorm
 
 import (
 	"errors"
