@@ -206,7 +206,7 @@ func StructToCamelCaseMap(rec interface{}) (map[string]interface{}, error) {
 	return tagMapData, nil
 }
 
-// StructToFieldValues converts struct/map to map (for DB columns and values)
+// StructToFieldValues converts struct to record fields and associated values (columns and values)
 func StructToFieldValues(rec interface{}, tag string) ([]string, []interface{}, error) {
 	// validate recs as struct{} type
 	recType := fmt.Sprintf("%v", reflect.TypeOf(rec).Kind())

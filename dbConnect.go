@@ -16,7 +16,7 @@ func GormDb(dbConfig DbConfig) (db *gorm.DB, err error) {
 	if sslMode == "" {
 		sslMode = "disable"
 	}
-	dsn := fmt.Sprintf("port=%d host=%s user=%s password=%s dbname=%s sslmode=%v sslrootcert=%v TimeZone=%v", dbConfig.Port, dbConfig.Host, dbConfig.Username, dbConfig.Password, dbConfig.DbName, sslMode, sslCert, dbConfig.TimeZone)
+	dsn := fmt.Sprintf("port=%d host=%s user=%s password=%s dbname=%s sslmode=%v sslrootcert=%v TimeZone=%v", dbConfig.Port, dbConfig.Host, dbConfig.Username, dbConfig.Password, dbConfig.DbName, sslMode, sslCert, dbConfig.Timezone)
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
 		CreateBatchSize: 1000,
 	})
