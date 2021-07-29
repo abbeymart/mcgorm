@@ -18,6 +18,7 @@ type EmailUserNameType struct {
 	Username string
 }
 
+// EmailUsername processes and returns the loginName as email or username
 func EmailUsername(loginName string) EmailUserNameType {
 	if govalidator.IsEmail(loginName) {
 		return EmailUserNameType{
@@ -37,21 +38,23 @@ func TypeOf(rec interface{}) reflect.Type {
 	return reflect.TypeOf(rec)
 }
 
+// ParseRawValues process the raw rows/records from SQL-query
 func ParseRawValues(rawValues [][]byte) ([]interface{}, error) {
 	// variables
-	var v interface{}
-	var va []interface{}
+	var value interface{}
+	var values []interface{}
 	// parse the current-raw-values
 	for _, val := range rawValues {
-		if err := json.Unmarshal(val, &v); err != nil {
+		if err := json.Unmarshal(val, &value); err != nil {
 			return nil, errors.New(fmt.Sprintf("Error parsing raw-row-value: %v", err.Error()))
 		} else {
-			va = append(va, v)
+			values = append(values, value)
 		}
 	}
-	return va, nil
+	return values, nil
 }
 
+// ArrayStringContains check if a slice of string contains/includes a string value
 func ArrayStringContains(arr []string, val string) bool {
 	for _, a := range arr {
 		if a == val {
@@ -61,6 +64,7 @@ func ArrayStringContains(arr []string, val string) bool {
 	return false
 }
 
+// ArrayIntContains check if a slice of int contains/includes an int value
 func ArrayIntContains(arr []int, val int) bool {
 	for _, a := range arr {
 		if a == val {
@@ -70,7 +74,8 @@ func ArrayIntContains(arr []int, val int) bool {
 	return false
 }
 
-func ArraySQLInStringValues(arr []string) string {
+// ArrayToSQLStringValues transforms a slice of string to SQL-string-formatted-values
+func ArrayToSQLStringValues(arr []string) string {
 	result := ""
 	for ind, val := range arr {
 		result += "'" + val + "'"
@@ -81,9 +86,9 @@ func ArraySQLInStringValues(arr []string) string {
 	return result
 }
 
-// JsonDataETL method converts json inputs to equivalent struct data type specification
+// JsonToStruct converts json inputs to equivalent struct data type specification
 // rec must be a pointer to a type matching the jsonRec
-func JsonDataETL(jsonRec []byte, rec interface{}) error {
+func JsonToStruct(jsonRec []byte, rec interface{}) error {
 	if err := json.Unmarshal(jsonRec, &rec); err == nil {
 		return nil
 	} else {
@@ -91,7 +96,7 @@ func JsonDataETL(jsonRec []byte, rec interface{}) error {
 	}
 }
 
-// DataToValueParam method accepts only a struct record/param (type/model) and returns the ActionParamType
+// DataToValueParam accepts only a struct type/model and returns the ActionParamType
 // data camel/Pascal-case keys are converted to underscore-keys to match table-field/columns specs
 func DataToValueParam(rec interface{}) (ActionParamType, error) {
 	// validate recs as struct{} type
