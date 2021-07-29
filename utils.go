@@ -1,6 +1,6 @@
 // @Author: abbeymart | Abi Akindele | @Created: 2021-06-24 | @Updated: 2021-06-24
 // @Company: mConnect.biz | @License: MIT
-// @Description: go: mConnect
+// @Description: crud-utility-helper-functions
 
 package mcgorm
 
@@ -206,7 +206,7 @@ func StructToCaseUnderscoreMap(rec interface{}) (map[string]interface{}, error) 
 	return caseUnderscoreMapData, nil
 }
 
-// StructToFieldValues converts struct to record fields and associated values (columns and values)
+// StructToFieldValues converts struct to record fields(underscore) and associated values (columns and values)
 func StructToFieldValues(rec interface{}, tag string) ([]string, []interface{}, error) {
 	// validate recs as struct{} type
 	recType := fmt.Sprintf("%v", reflect.TypeOf(rec).Kind())
@@ -222,19 +222,15 @@ func StructToFieldValues(rec interface{}, tag string) ([]string, []interface{}, 
 	if err != nil {
 		return nil, nil, errors.New("error computing struct to map")
 	}
-	// compose tagMapDataValue
+	// compose table fields/column(underscore) and values
 	for key, val := range mapDataValue {
-		tagField, tagErr := TagField(rec.(struct{}), key, tag)
-		if tagErr != nil {
-			return nil, nil, errors.New(fmt.Sprintf("error retrieving tag-field: %v", key))
-		}
-		tableFields = append(tableFields, tagField)
+		tableFields = append(tableFields, govalidator.CamelCaseToUnderscore(key))
 		fieldValues = append(fieldValues, val)
 	}
 	return tableFields, fieldValues, nil
 }
 
-// ArrayMapToStruct converts []map to []struct
+// ArrayMapToStruct converts []map to []struct/model-type
 func ArrayMapToStruct(actParams ActionParamsType, recs interface{}) (interface{}, error) {
 	// validate recs as slice / []struct{} type
 	recsType := fmt.Sprintf("%v", reflect.TypeOf(recs).Kind())
@@ -247,6 +243,7 @@ func ArrayMapToStruct(actParams ActionParamsType, recs interface{}) (interface{}
 	switch rType := recs.(type) {
 	case []interface{}:
 		for i, val := range rType {
+			// validate each record as struct type
 			recType := fmt.Sprintf("%v", reflect.TypeOf(val).Kind())
 			switch recType {
 			case "struct":
@@ -273,8 +270,8 @@ func ArrayMapToStruct(actParams ActionParamsType, recs interface{}) (interface{}
 }
 
 // MapToStruct converts map to struct
-func MapToStruct(actParam map[string]interface{}, rec interface{}) (interface{}, error) {
-	// validate recs as struct{} type
+func MapToStruct(mapRecord map[string]interface{}, rec interface{}) (interface{}, error) {
+	// validate rec as struct{} type
 	recType := fmt.Sprintf("%v", reflect.TypeOf(rec).Kind())
 	switch recType {
 	case "struct":
@@ -282,12 +279,12 @@ func MapToStruct(actParam map[string]interface{}, rec interface{}) (interface{},
 	default:
 		return nil, errors.New(fmt.Sprintf("rec parameter must be of type struct{}"))
 	}
-	// compute json records from actParams
-	jsonRec, err := json.Marshal(actParam)
+	// compute json records from actParams (map-record)
+	jsonRec, err := json.Marshal(mapRecord)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("error computing map to struct records: %v", err.Error()))
 	}
-	// transform json records to []struct{} (recs)
+	// transform json record to struct{} (rec)
 	err = json.Unmarshal(jsonRec, &rec)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("error computing map to struct records: %v", err.Error()))
