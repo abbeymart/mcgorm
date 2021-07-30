@@ -43,7 +43,6 @@ func (crud *Crud) ApiDeleteRecord(modelRef interface{}) mcresponse.ResponseMessa
 	})
 }
 
-
 func GetParamsMessage(msgObject MessageObject, msgType string) mcresponse.ResponseMessage {
 	var messages = ""
 
@@ -62,4 +61,3 @@ func GetParamsMessage(msgObject MessageObject, msgType string) mcresponse.Respon
 		Value:   nil,
 	})
 }
-
