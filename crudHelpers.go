@@ -38,7 +38,7 @@ func (crud *Crud) ApiDeleteRecord(modelRef interface{}) mcresponse.ResponseMessa
 		return crud.DeleteByParam(modelRef)
 	}
 	return mcresponse.GetResMessage("paramsError", mcresponse.ResponseMessageOptions{
-		Message: fmt.Sprintf("Records can be deleted by Id or QueryParams only."),
+		Message: fmt.Sprintf("Records can be deleted by Ids or QueryParams only."),
 		Value:   nil,
 	})
 }

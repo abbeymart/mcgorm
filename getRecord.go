@@ -8,32 +8,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/abbeymart/mcresponse"
-	"gorm.io/gorm"
 )
 
-type GetStats struct {
-	Skip              int
-	Limit             int
-	RecordsCount      int
-	TotalRecordsCount int
-}
-
-type GetResult struct {
-	Records interface{}
-	Stats   GetStats
-}
-
 func (crud Crud) GetById(modelRef interface{}, id string) mcresponse.ResponseMessage {
-	// for limit > 0 and skip/offset > 0 OR limit > 0
-	var result *gorm.DB
-	if crud.Limit > 0 && crud.Skip > 0 {
-		result = crud.GormDb.Limit(crud.Limit).Offset(crud.Skip).Where("id = ?", id).Find(&modelRef)
-	} else if crud.Limit > 0 {
-		result = crud.GormDb.Limit(crud.Limit).Where("id = ?", id).Find(&modelRef)
-	} else {
-		result = crud.GormDb.Where("id = ?", id).Find(&modelRef)
-	}
-
+	// perform get-query
+	//var result *gorm.DB
+	result := crud.GormDb.Limit(crud.Limit).Offset(crud.Skip).Where("id = ?", id).Find(&modelRef)
 	if result.Error != nil {
 		return mcresponse.GetResMessage("readError",
 			mcresponse.ResponseMessageOptions{
@@ -82,23 +62,32 @@ func (crud Crud) GetById(modelRef interface{}, id string) mcresponse.ResponseMes
 	var totalRecordsCount int64
 	var _ = crud.GormDb.Find(modelRef).Count(&totalRecordsCount)
 	// logRead
+	var logRes mcresponse.ResponseMessage
 	if crud.LogRead {
-		_, _ = crud.TransLog.AuditLog(CrudTasks().Read, crud.UserInfo.UserId, AuditLogOptionsType{
+		logRes, err = crud.TransLog.AuditLog(CrudTasks().Read, crud.UserInfo.UserId, AuditLogOptionsType{
 			LogRecords: []string{id},
 			TableName:  crud.TableName,
 		})
+		if err != nil {
+			logRes = mcresponse.ResponseMessage{
+				Code:    "logError",
+				Message: fmt.Sprintf("Audit-log error: %v", err.Error()),
+				Value:   nil,
+			}
+		}
 	}
 	return mcresponse.GetResMessage("success",
 		mcresponse.ResponseMessageOptions{
 			Message: "Task completed successfully",
-			Value: GetResult{
+			Value: GetResultType{
 				Records: records,
-				Stats: GetStats{
+				Stats: GetStatType{
 					Skip:              crud.Skip,
 					Limit:             crud.Limit,
 					RecordsCount:      int(result.RowsAffected),
 					TotalRecordsCount: int(totalRecordsCount),
 				},
+				LogRes: logRes,
 			},
 		})
 }
@@ -111,16 +100,8 @@ func (crud Crud) GetByIds(modelRef interface{}) mcresponse.ResponseMessage {
 				Value:   nil,
 			})
 	}
-	// for limit > 0 and skip/offset > 0 OR limit > 0
-	var result *gorm.DB
-	if crud.Limit > 0 && crud.Skip > 0 {
-		result = crud.GormDb.Limit(crud.Limit).Offset(crud.Skip).Where("id in ?", crud.RecordIds).Find(&modelRef)
-	} else if crud.Limit > 0 {
-		result = crud.GormDb.Limit(crud.Limit).Where("id in ?", crud.RecordIds).Find(&modelRef)
-	} else {
-		result = crud.GormDb.Where("id in ?", crud.RecordIds).Find(&modelRef)
-	}
-
+	// perform get-query
+	result := crud.GormDb.Limit(crud.Limit).Offset(crud.Skip).Where("id in ?", crud.RecordIds).Find(&modelRef)
 	if result.Error != nil {
 		return mcresponse.GetResMessage("readError",
 			mcresponse.ResponseMessageOptions{
@@ -169,23 +150,32 @@ func (crud Crud) GetByIds(modelRef interface{}) mcresponse.ResponseMessage {
 	var totalRecordsCount int64
 	var _ = crud.GormDb.Find(modelRef).Count(&totalRecordsCount)
 	// logRead
+	var logRes mcresponse.ResponseMessage
 	if crud.LogRead {
-		_, _ = crud.TransLog.AuditLog(CrudTasks().Read, crud.UserInfo.UserId, AuditLogOptionsType{
+		logRes, err = crud.TransLog.AuditLog(CrudTasks().Read, crud.UserInfo.UserId, AuditLogOptionsType{
 			LogRecords: crud.RecordIds,
 			TableName:  crud.TableName,
 		})
+		if err != nil {
+			logRes = mcresponse.ResponseMessage{
+				Code:    "logError",
+				Message: fmt.Sprintf("Audit-log error: %v", err.Error()),
+				Value:   nil,
+			}
+		}
 	}
 	return mcresponse.GetResMessage("success",
 		mcresponse.ResponseMessageOptions{
 			Message: "Task completed successfully",
-			Value: GetResult{
+			Value: GetResultType{
 				Records: records,
-				Stats: GetStats{
+				Stats: GetStatType{
 					Skip:              crud.Skip,
 					Limit:             crud.Limit,
 					RecordsCount:      int(result.RowsAffected),
 					TotalRecordsCount: int(totalRecordsCount),
 				},
+				LogRes: logRes,
 			},
 		})
 }
@@ -198,16 +188,8 @@ func (crud Crud) GetByParam(modelRef interface{}) mcresponse.ResponseMessage {
 				Value:   nil,
 			})
 	}
-	// for limit > 0 and skip/offset > 0 OR limit > 0
-	var result *gorm.DB
-	if crud.Limit > 0 && crud.Skip > 0 {
-		result = crud.GormDb.Limit(crud.Limit).Offset(crud.Skip).Where(crud.QueryParams).Find(&modelRef)
-	} else if crud.Limit > 0 {
-		result = crud.GormDb.Limit(crud.Limit).Where(crud.QueryParams).Find(&modelRef)
-	} else {
-		result = crud.GormDb.Where(crud.QueryParams).Find(&modelRef)
-	}
-
+	// perform get-query
+	result := crud.GormDb.Limit(crud.Limit).Offset(crud.Skip).Where(crud.QueryParams).Find(&modelRef)
 	if result.Error != nil {
 		errMsg := fmt.Sprintf("%v", result.Error.Error())
 		return mcresponse.GetResMessage("readError",
@@ -256,38 +238,39 @@ func (crud Crud) GetByParam(modelRef interface{}) mcresponse.ResponseMessage {
 	var totalRecordsCount int64
 	var _ = crud.GormDb.Find(modelRef).Count(&totalRecordsCount)
 	// logRead
+	var logRes mcresponse.ResponseMessage
 	if crud.LogRead {
-		_, _ = crud.TransLog.AuditLog(CrudTasks().Read, crud.UserInfo.UserId, AuditLogOptionsType{
+		logRes, err = crud.TransLog.AuditLog(CrudTasks().Read, crud.UserInfo.UserId, AuditLogOptionsType{
 			LogRecords: crud.QueryParams,
 			TableName:  crud.TableName,
 		})
+		if err != nil {
+			logRes = mcresponse.ResponseMessage{
+				Code:    "logError",
+				Message: fmt.Sprintf("Audit-log error: %v", err.Error()),
+				Value:   nil,
+			}
+		}
 	}
 	return mcresponse.GetResMessage("success",
 		mcresponse.ResponseMessageOptions{
 			Message: "Task completed successfully",
-			Value: GetResult{
+			Value: GetResultType{
 				Records: records,
-				Stats: GetStats{
+				Stats: GetStatType{
 					Skip:              crud.Skip,
 					Limit:             crud.Limit,
 					RecordsCount:      int(result.RowsAffected),
 					TotalRecordsCount: int(totalRecordsCount),
 				},
+				LogRes: logRes,
 			},
 		})
 }
 
 func (crud Crud) GetAll(modelRef interface{}) mcresponse.ResponseMessage {
-	// for limit > 0 and skip/offset > 0 OR limit > 0
-	var result *gorm.DB
-	if crud.Limit > 0 && crud.Skip > 0 {
-		result = crud.GormDb.Limit(crud.Limit).Offset(crud.Skip).Find(&modelRef)
-	} else if crud.Limit > 0 {
-		result = crud.GormDb.Limit(crud.Limit).Find(&modelRef)
-	} else {
-		result = crud.GormDb.Find(&modelRef)
-	}
-
+	// perform get-query
+	result := crud.GormDb.Limit(crud.Limit).Offset(crud.Skip).Find(&modelRef)
 	if result.Error != nil {
 		return mcresponse.GetResMessage("readError",
 			mcresponse.ResponseMessageOptions{
@@ -335,23 +318,32 @@ func (crud Crud) GetAll(modelRef interface{}) mcresponse.ResponseMessage {
 	var totalRecordsCount int64
 	var _ = crud.GormDb.Find(modelRef).Count(&totalRecordsCount)
 	// logRead
+	var logRes mcresponse.ResponseMessage
 	if crud.LogRead {
-		_, _ = crud.TransLog.AuditLog(CrudTasks().Read, crud.UserInfo.UserId, AuditLogOptionsType{
+		logRes, err = crud.TransLog.AuditLog(CrudTasks().Read, crud.UserInfo.UserId, AuditLogOptionsType{
 			LogRecords: map[string]interface{}{"getType": "All Records"},
 			TableName:  crud.TableName,
 		})
+		if err != nil {
+			logRes = mcresponse.ResponseMessage{
+				Code:    "logError",
+				Message: fmt.Sprintf("Audit-log error: %v", err.Error()),
+				Value:   nil,
+			}
+		}
 	}
 	return mcresponse.GetResMessage("success",
 		mcresponse.ResponseMessageOptions{
 			Message: "Task completed successfully",
-			Value: GetResult{
+			Value: GetResultType{
 				Records: records,
-				Stats: GetStats{
+				Stats: GetStatType{
 					Skip:              crud.Skip,
 					Limit:             crud.Limit,
 					RecordsCount:      int(result.RowsAffected),
 					TotalRecordsCount: int(totalRecordsCount),
 				},
+				LogRes: logRes,
 			},
 		})
 }

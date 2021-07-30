@@ -242,7 +242,7 @@ type GetStatType struct {
 }
 
 type GetResultType struct {
-	Records  []map[string]interface{}   `json:"value"`
+	Records  []interface{}              `json:"value"`
 	Stats    GetStatType                `json:"stats"`
 	TaskType string                     `json:"taskType"`
 	LogRes   mcresponse.ResponseMessage `json:"logRes"`
