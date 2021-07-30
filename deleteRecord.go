@@ -15,7 +15,7 @@ func (crud Crud) DeleteById(modelRef interface{}, id string) mcresponse.Response
 		// get current record
 		getRes = crud.GetById(modelRef, id)
 	}
-	// perform crud-delete task
+	// perform crud-delete task (permanent delete with Unscoped)
 	result := crud.GormDb.Where("id = ?", id).Unscoped().Delete(&modelRef)
 	if result.Error != nil {
 		return mcresponse.GetResMessage("deleteError",
@@ -25,16 +25,28 @@ func (crud Crud) DeleteById(modelRef interface{}, id string) mcresponse.Response
 			})
 	}
 	// LogDelete
+	var logRes mcresponse.ResponseMessage
+	var err error
 	if crud.LogDelete {
-		_, _ = crud.TransLog.AuditLog(CrudTasks().Delete, crud.UserInfo.UserId, AuditLogOptionsType{
+		logRes, err = crud.TransLog.AuditLog(CrudTasks().Delete, crud.UserInfo.UserId, AuditLogOptionsType{
 			LogRecords: getRes.Value,
 			TableName:  crud.TableName,
 		})
+		if err != nil {
+			logRes = mcresponse.ResponseMessage{
+				Code:    "logError",
+				Message: fmt.Sprintf("Audit-log error: %v", err.Error()),
+				Value:   nil,
+			}
+		}
 	}
 	return mcresponse.GetResMessage("success",
 		mcresponse.ResponseMessageOptions{
 			Message: "Task completed successfully",
-			Value:   nil,
+			Value: CrudResultType{
+				LogRes:      logRes,
+				RecordCount: int(result.RowsAffected),
+			},
 		})
 }
 
@@ -61,16 +73,28 @@ func (crud Crud) DeleteByIds(modelRef interface{}) mcresponse.ResponseMessage {
 			})
 	}
 	// LogDelete
+	var logRes mcresponse.ResponseMessage
+	var err error
 	if crud.LogDelete {
-		_, _ = crud.TransLog.AuditLog(CrudTasks().Delete, crud.UserInfo.UserId, AuditLogOptionsType{
+		logRes, err = crud.TransLog.AuditLog(CrudTasks().Delete, crud.UserInfo.UserId, AuditLogOptionsType{
 			LogRecords: getRes.Value,
 			TableName:  crud.TableName,
 		})
+		if err != nil {
+			logRes = mcresponse.ResponseMessage{
+				Code:    "logError",
+				Message: fmt.Sprintf("Audit-log error: %v", err.Error()),
+				Value:   nil,
+			}
+		}
 	}
 	return mcresponse.GetResMessage("success",
 		mcresponse.ResponseMessageOptions{
 			Message: "Task completed successfully",
-			Value:   nil,
+			Value: CrudResultType{
+				LogRes:      logRes,
+				RecordCount: int(result.RowsAffected),
+			},
 		})
 }
 
@@ -97,15 +121,27 @@ func (crud Crud) DeleteByParam(modelRef interface{}) mcresponse.ResponseMessage 
 			})
 	}
 	// LogDelete
+	var logRes mcresponse.ResponseMessage
+	var err error
 	if crud.LogDelete {
-		_, _ = crud.TransLog.AuditLog(CrudTasks().Delete, crud.UserInfo.UserId, AuditLogOptionsType{
+		logRes, err = crud.TransLog.AuditLog(CrudTasks().Delete, crud.UserInfo.UserId, AuditLogOptionsType{
 			LogRecords: getRes.Value,
 			TableName:  crud.TableName,
 		})
+		if err != nil {
+			logRes = mcresponse.ResponseMessage{
+				Code:    "logError",
+				Message: fmt.Sprintf("Audit-log error: %v", err.Error()),
+				Value:   nil,
+			}
+		}
 	}
 	return mcresponse.GetResMessage("success",
 		mcresponse.ResponseMessageOptions{
 			Message: "Task completed successfully",
-			Value:   nil,
+			Value: CrudResultType{
+				LogRes:      logRes,
+				RecordCount: int(result.RowsAffected),
+			},
 		})
 }

@@ -109,7 +109,7 @@ func NewCrud(params CrudParamsType, options CrudOptionsType) (crudInstance *Crud
 		crudInstance.Limit = crudInstance.MaxQueryLimit
 	}
 	if (crudInstance.Limit - crudInstance.Skip) > crudInstance.MaxQueryLimit {
-		crudInstance.Limit = crudInstance.MaxQueryLimit + crudInstance.Skip
+		crudInstance.Limit = crudInstance.Skip + crudInstance.MaxQueryLimit
 	}
 	if crudInstance.CacheExpire <= 0 {
 		crudInstance.CacheExpire = 300 // 300 secs, 5 minutes

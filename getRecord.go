@@ -41,11 +41,11 @@ func (crud Crud) GetById(modelRef interface{}, id string) mcresponse.ResponseMes
 					Value:   nil,
 				})
 		}
-		// get snapshot value from the pointer | transform value to json-value-format
+		// get snapshot value from the pointer | transform value to json-value([]byte)
 		jByte, jErr := json.Marshal(modelRef)
 		if jErr != nil {
 			return mcresponse.GetResMessage("paramsError", mcresponse.ResponseMessageOptions{
-				Message: fmt.Sprintf("Error transforming result-value into json-value-format: %v", jErr.Error()),
+				Message: fmt.Sprintf("Error transforming record(row-value) into json-value([]byte): %v", jErr.Error()),
 				Value:   nil,
 			})
 		}
@@ -53,7 +53,7 @@ func (crud Crud) GetById(modelRef interface{}, id string) mcresponse.ResponseMes
 		jErr = json.Unmarshal(jByte, &gValue)
 		if jErr != nil {
 			return mcresponse.GetResMessage("paramsError", mcresponse.ResponseMessageOptions{
-				Message: fmt.Sprintf("Error transforming result-value into json-value-format: %v", jErr.Error()),
+				Message: fmt.Sprintf("Error transforming json-value to result-value: %v", jErr.Error()),
 				Value:   nil,
 			})
 		}
@@ -129,11 +129,11 @@ func (crud Crud) GetByIds(modelRef interface{}) mcresponse.ResponseMessage {
 					Value:   nil,
 				})
 		}
-		// get snapshot value from the pointer | transform value to json-value-format
+		// get snapshot value from the pointer | transform value to json-value([]byte)
 		jByte, jErr := json.Marshal(modelRef)
 		if jErr != nil {
 			return mcresponse.GetResMessage("paramsError", mcresponse.ResponseMessageOptions{
-				Message: fmt.Sprintf("Error transforming result-value into json-value-format: %v", jErr.Error()),
+				Message: fmt.Sprintf("Error transforming record(row-value) into json-value([]byte): %v", jErr.Error()),
 				Value:   nil,
 			})
 		}
@@ -141,7 +141,7 @@ func (crud Crud) GetByIds(modelRef interface{}) mcresponse.ResponseMessage {
 		jErr = json.Unmarshal(jByte, &gValue)
 		if jErr != nil {
 			return mcresponse.GetResMessage("paramsError", mcresponse.ResponseMessageOptions{
-				Message: fmt.Sprintf("Error transforming result-value into json-value-format: %v", jErr.Error()),
+				Message: fmt.Sprintf("Error transforming json-value to result-value: %v", jErr.Error()),
 				Value:   nil,
 			})
 		}
@@ -217,11 +217,11 @@ func (crud Crud) GetByParam(modelRef interface{}) mcresponse.ResponseMessage {
 					Value:   nil,
 				})
 		}
-		// get snapshot value from the pointer | transform value to json-value-format
+		// get snapshot value from the pointer | transform value to json-value([]byte)
 		jByte, jErr := json.Marshal(modelRef)
 		if jErr != nil {
 			return mcresponse.GetResMessage("paramsError", mcresponse.ResponseMessageOptions{
-				Message: fmt.Sprintf("Error transforming result-value into json-value-format: %v", jErr.Error()),
+				Message: fmt.Sprintf("Error transforming record(row-value) into json-value([]byte): %v", jErr.Error()),
 				Value:   nil,
 			})
 		}
@@ -229,7 +229,7 @@ func (crud Crud) GetByParam(modelRef interface{}) mcresponse.ResponseMessage {
 		jErr = json.Unmarshal(jByte, &gValue)
 		if jErr != nil {
 			return mcresponse.GetResMessage("paramsError", mcresponse.ResponseMessageOptions{
-				Message: fmt.Sprintf("Error transforming result-value into json-value-format: %v", jErr.Error()),
+				Message: fmt.Sprintf("Error transforming json-value to result-value: %v", jErr.Error()),
 				Value:   nil,
 			})
 		}
@@ -297,11 +297,11 @@ func (crud Crud) GetAll(modelRef interface{}) mcresponse.ResponseMessage {
 					Value:   nil,
 				})
 		}
-		// get snapshot value from the pointer | transform value to json-value-format
+		// get snapshot value from the pointer | transform value to json-value([]byte)
 		jByte, jErr := json.Marshal(modelRef)
 		if jErr != nil {
 			return mcresponse.GetResMessage("paramsError", mcresponse.ResponseMessageOptions{
-				Message: fmt.Sprintf("Error transforming result-value into json-value-format: %v", jErr.Error()),
+				Message: fmt.Sprintf("Error transforming record(row-value) into json-value([]byte): %v", jErr.Error()),
 				Value:   nil,
 			})
 		}
@@ -309,7 +309,7 @@ func (crud Crud) GetAll(modelRef interface{}) mcresponse.ResponseMessage {
 		jErr = json.Unmarshal(jByte, &gValue)
 		if jErr != nil {
 			return mcresponse.GetResMessage("paramsError", mcresponse.ResponseMessageOptions{
-				Message: fmt.Sprintf("Error transforming result-value into json-value-format: %v", jErr.Error()),
+				Message: fmt.Sprintf("Error transforming json-value to result-value: %v", jErr.Error()),
 				Value:   nil,
 			})
 		}

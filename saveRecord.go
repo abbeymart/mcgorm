@@ -21,18 +21,26 @@ func (crud Crud) Create(rec interface{}) mcresponse.ResponseMessage {
 			})
 	}
 	// LogCreate
-	logRes := mcresponse.ResponseMessage{}
+	var logRes mcresponse.ResponseMessage
+	var err error
 	if crud.LogCreate {
-		logRes, _ = crud.TransLog.AuditLog(CrudTasks().Create, crud.UserInfo.UserId, AuditLogOptionsType{
+		logRes, err = crud.TransLog.AuditLog(CrudTasks().Create, crud.UserInfo.UserId, AuditLogOptionsType{
 			LogRecords: rec,
 			TableName:  crud.TableName,
 		})
+		if err != nil {
+			logRes = mcresponse.ResponseMessage{
+				Code:    "logError",
+				Message: fmt.Sprintf("Audit-log error: %v", err.Error()),
+				Value:   nil,
+			}
+		}
 	}
 	return mcresponse.GetResMessage("success",
 		mcresponse.ResponseMessageOptions{
 			Message: "Task completed successfully",
-			Value: SaveResultType{
-				RecordsCount: int(result.RowsAffected),
+			Value: CrudResultType{
+				RecordCount: int(result.RowsAffected),
 				LogRes:       logRes,
 				TaskType:     crud.TaskType,
 			},
@@ -53,18 +61,26 @@ func (crud Crud) CreateBatch(recs interface{}, batch int) mcresponse.ResponseMes
 			})
 	}
 	// LogCreate
-	logRes := mcresponse.ResponseMessage{}
+	var logRes mcresponse.ResponseMessage
+	var err error
 	if crud.LogCreate {
-		logRes, _ = crud.TransLog.AuditLog(CrudTasks().Create, crud.UserInfo.UserId, AuditLogOptionsType{
+		logRes, err = crud.TransLog.AuditLog(CrudTasks().Create, crud.UserInfo.UserId, AuditLogOptionsType{
 			LogRecords: recs,
 			TableName:  crud.TableName,
 		})
+		if err != nil {
+			logRes = mcresponse.ResponseMessage{
+				Code:    "logError",
+				Message: fmt.Sprintf("Audit-log error: %v", err.Error()),
+				Value:   nil,
+			}
+		}
 	}
 	return mcresponse.GetResMessage("success",
 		mcresponse.ResponseMessageOptions{
 			Message: "Task completed successfully",
-			Value: SaveResultType{
-				RecordsCount: int(result.RowsAffected),
+			Value: CrudResultType{
+				RecordCount: int(result.RowsAffected),
 				LogRes:       logRes,
 				TaskType:     crud.TaskType,
 			},
@@ -103,21 +119,28 @@ func (crud Crud) UpdateById(model interface{}, rec interface{}, id string) mcres
 			})
 	}
 	// LogUpdate
-	logRes := mcresponse.ResponseMessage{}
+	var logRes mcresponse.ResponseMessage
 	if crud.LogUpdate {
-		logRes, _ = crud.TransLog.AuditLog(CrudTasks().Update, crud.UserInfo.UserId, AuditLogOptionsType{
+		logRes, err = crud.TransLog.AuditLog(CrudTasks().Update, crud.UserInfo.UserId, AuditLogOptionsType{
 			LogRecords:    getRes.Value,
 			NewLogRecords: map[string]interface{}{"id": []string{id}, "record": rec},
 			TableName:     crud.TableName,
 		})
+		if err != nil {
+			logRes = mcresponse.ResponseMessage{
+				Code:    "logError",
+				Message: fmt.Sprintf("Audit-log error: %v", err.Error()),
+				Value:   nil,
+			}
+		}
 	}
 	return mcresponse.GetResMessage("success",
 		mcresponse.ResponseMessageOptions{
 			Message: "Task completed successfully",
-			Value: SaveResultType{
-				RecordsCount: int(result.RowsAffected),
-				LogRes:       logRes,
-				TaskType:     crud.TaskType,
+			Value: CrudResultType{
+				RecordCount: int(result.RowsAffected),
+				LogRes:      logRes,
+				TaskType:    crud.TaskType,
 			},
 		})
 }
@@ -161,19 +184,26 @@ func (crud Crud) UpdateByIds(model interface{}, rec interface{}) mcresponse.Resp
 			})
 	}
 	// LogUpdate
-	logRes := mcresponse.ResponseMessage{}
+	var logRes mcresponse.ResponseMessage
 	if crud.LogUpdate {
-		logRes, _ = crud.TransLog.AuditLog(CrudTasks().Update, crud.UserInfo.UserId, AuditLogOptionsType{
+		logRes, err = crud.TransLog.AuditLog(CrudTasks().Update, crud.UserInfo.UserId, AuditLogOptionsType{
 			LogRecords:    getRes.Value,
 			NewLogRecords: map[string]interface{}{"id": crud.RecordIds, "record": rec},
 			TableName:     crud.TableName,
 		})
+		if err != nil {
+			logRes = mcresponse.ResponseMessage{
+				Code:    "logError",
+				Message: fmt.Sprintf("Audit-log error: %v", err.Error()),
+				Value:   nil,
+			}
+		}
 	}
 	return mcresponse.GetResMessage("success",
 		mcresponse.ResponseMessageOptions{
 			Message: "Task completed successfully",
-			Value: SaveResultType{
-				RecordsCount: int(result.RowsAffected),
+			Value: CrudResultType{
+				RecordCount: int(result.RowsAffected),
 				LogRes:       logRes,
 				TaskType:     crud.TaskType,
 			},
@@ -219,19 +249,26 @@ func (crud Crud) UpdateByParam(model interface{}, rec interface{}) mcresponse.Re
 			})
 	}
 	// LogUpdate
-	logRes := mcresponse.ResponseMessage{}
+	var logRes mcresponse.ResponseMessage
 	if crud.LogUpdate {
-		logRes, _ = crud.TransLog.AuditLog(CrudTasks().Update, crud.UserInfo.UserId, AuditLogOptionsType{
+		logRes, err = crud.TransLog.AuditLog(CrudTasks().Update, crud.UserInfo.UserId, AuditLogOptionsType{
 			LogRecords:    getRes.Value,
 			NewLogRecords: map[string]interface{}{"queryParams": crud.QueryParams, "record": rec},
 			TableName:     crud.TableName,
 		})
+		if err != nil {
+			logRes = mcresponse.ResponseMessage{
+				Code:    "logError",
+				Message: fmt.Sprintf("Audit-log error: %v", err.Error()),
+				Value:   nil,
+			}
+		}
 	}
 	return mcresponse.GetResMessage("success",
 		mcresponse.ResponseMessageOptions{
 			Message: "Task completed successfully",
-			Value: SaveResultType{
-				RecordsCount: int(result.RowsAffected),
+			Value: CrudResultType{
+				RecordCount: int(result.RowsAffected),
 				LogRes:       logRes,
 				TaskType:     crud.TaskType,
 			},
@@ -239,6 +276,8 @@ func (crud Crud) UpdateByParam(model interface{}, rec interface{}) mcresponse.Re
 }
 
 func (crud Crud) Update(model interface{}, recs interface{}) mcresponse.ResponseMessage {
+	// TODO: validate recs as slice of interface/records(struct/map)
+
 	var getRes mcresponse.ResponseMessage
 	if crud.LogUpdate {
 		// get current records
@@ -255,6 +294,7 @@ func (crud Crud) Update(model interface{}, recs interface{}) mcresponse.Response
 		crud.RecordIds = recIds
 		getRes = crud.GetByIds(model)
 	}
+
 	// TODO: perform batch updates | transactional
 	var result *gorm.DB
 	resultCount := 0
@@ -289,19 +329,27 @@ func (crud Crud) Update(model interface{}, recs interface{}) mcresponse.Response
 		resultCount++
 	}
 	// LogUpdate
-	logRes := mcresponse.ResponseMessage{}
+	var logRes mcresponse.ResponseMessage
+	var err error
 	if crud.LogUpdate {
-		logRes, _ = crud.TransLog.AuditLog(CrudTasks().Update, crud.UserInfo.UserId, AuditLogOptionsType{
+		logRes, err = crud.TransLog.AuditLog(CrudTasks().Update, crud.UserInfo.UserId, AuditLogOptionsType{
 			LogRecords:    getRes.Value,
 			NewLogRecords: recs,
 			TableName:     crud.TableName,
 		})
+		if err != nil {
+			logRes = mcresponse.ResponseMessage{
+				Code:    "logError",
+				Message: fmt.Sprintf("Audit-log error: %v", err.Error()),
+				Value:   nil,
+			}
+		}
 	}
 	return mcresponse.GetResMessage("success",
 		mcresponse.ResponseMessageOptions{
 			Message: "Task completed successfully",
-			Value: SaveResultType{
-				RecordsCount: resultCount,
+			Value: CrudResultType{
+				RecordCount: resultCount,
 				LogRes:       logRes,
 				TaskType:     crud.TaskType,
 			},
