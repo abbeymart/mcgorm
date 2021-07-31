@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/abbeymart/mcresponse"
 	"gorm.io/gorm"
+	"reflect"
 	"strings"
 )
 
@@ -41,8 +42,8 @@ func (crud Crud) Create(rec interface{}) mcresponse.ResponseMessage {
 			Message: "Task completed successfully",
 			Value: CrudResultType{
 				RecordCount: int(result.RowsAffected),
-				LogRes:       logRes,
-				TaskType:     crud.TaskType,
+				LogRes:      logRes,
+				TaskType:    crud.TaskType,
 			},
 		})
 }
@@ -81,8 +82,8 @@ func (crud Crud) CreateBatch(recs interface{}, batch int) mcresponse.ResponseMes
 			Message: "Task completed successfully",
 			Value: CrudResultType{
 				RecordCount: int(result.RowsAffected),
-				LogRes:       logRes,
-				TaskType:     crud.TaskType,
+				LogRes:      logRes,
+				TaskType:    crud.TaskType,
 			},
 		})
 }
@@ -204,8 +205,8 @@ func (crud Crud) UpdateByIds(model interface{}, rec interface{}) mcresponse.Resp
 			Message: "Task completed successfully",
 			Value: CrudResultType{
 				RecordCount: int(result.RowsAffected),
-				LogRes:       logRes,
-				TaskType:     crud.TaskType,
+				LogRes:      logRes,
+				TaskType:    crud.TaskType,
 			},
 		})
 }
@@ -269,14 +270,48 @@ func (crud Crud) UpdateByParam(model interface{}, rec interface{}) mcresponse.Re
 			Message: "Task completed successfully",
 			Value: CrudResultType{
 				RecordCount: int(result.RowsAffected),
-				LogRes:       logRes,
-				TaskType:     crud.TaskType,
+				LogRes:      logRes,
+				TaskType:    crud.TaskType,
 			},
 		})
 }
 
 func (crud Crud) Update(model interface{}, recs interface{}) mcresponse.ResponseMessage {
 	// TODO: validate recs as slice of interface/records(struct/map)
+	recsType := fmt.Sprintf("%v", reflect.TypeOf(recs).Kind())
+	switch recsType {
+	case "slice":
+		break
+	default:
+		return mcresponse.GetResMessage("paramsError",
+			mcresponse.ResponseMessageOptions{
+				Message: fmt.Sprintf("recs parameter must be of type []struct{}: %v", recsType),
+				Value:   nil,
+			})
+	}
+	switch rType := recs.(type) {
+	case []interface{}:
+		for i, val := range rType {
+			// validate each record as struct type
+			recType := fmt.Sprintf("%v", reflect.TypeOf(val).Kind())
+			switch recType {
+			case "struct":
+				break
+			default:
+				return mcresponse.GetResMessage("paramsError",
+					mcresponse.ResponseMessageOptions{
+						Message: fmt.Sprintf("recs[%v] parameter must be of type struct{}: %v", i, recType),
+						Value:   nil,
+					})
+			}
+		}
+	default:
+		return mcresponse.GetResMessage("paramsError",
+			mcresponse.ResponseMessageOptions{
+				Message: fmt.Sprintf("rec parameter must be of type []struct{}: %v", rType),
+				Value:   nil,
+			})
+	}
 
 	var getRes mcresponse.ResponseMessage
 	if crud.LogUpdate {
@@ -350,8 +385,8 @@ func (crud Crud) Update(model interface{}, recs interface{}) mcresponse.Response
 			Message: "Task completed successfully",
 			Value: CrudResultType{
 				RecordCount: resultCount,
-				LogRes:       logRes,
-				TaskType:     crud.TaskType,
+				LogRes:      logRes,
+				TaskType:    crud.TaskType,
 			},
 		})
 }
