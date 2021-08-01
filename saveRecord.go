@@ -277,7 +277,7 @@ func (crud Crud) UpdateByParam(model interface{}, rec interface{}) mcresponse.Re
 }
 
 func (crud Crud) Update(model interface{}, recs interface{}) mcresponse.ResponseMessage {
-	// TODO: validate recs as slice of interface/records(struct/map)
+	// validate recs as slice of interface/records(struct/map)
 	recsType := fmt.Sprintf("%v", reflect.TypeOf(recs).Kind())
 	switch recsType {
 	case "slice":
