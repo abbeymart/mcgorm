@@ -10,32 +10,31 @@ import (
 
 type Group struct {
 	BaseModelType
-	Name string `json:"name" gorm:"unique"`
+	Name string `json:"name" gorm:"unique" mcorm:"name"`
 }
 
 type Category struct {
 	BaseModelType
 	Name      string    `json:"name"  mcorm:"name"`
 	OwnerId   string    `json:"ownerId" mcorm:"owner_id"`
-	Path      string    `json:"path"`
-	Priority  uint      `json:"priority"`
-	ParentId  *string   `json:"parentId"`
-	Parent    *Category `json:"parent" gorm:"foreignKey:ParentId;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	Language  string    `json:"language"`
-	IconStyle string    `json:"iconStyle"`
+	Path      string    `json:"path" mcorm:"path"`
+	Priority  uint      `json:"priority" mcorm:"priority"`
+	ParentId  *string   `json:"parentId" mcorm:"parent_id"`
+	GroupId   string    `json:"groupId" mcorm:"group_id"`
+	Group     Group     `json:"group" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" mcorm:"group"`
+	Parent    *Category `json:"parent" gorm:"foreignKey:ParentId;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" mcorm:"parent"`
+	IconStyle string    `json:"iconStyle" mcorm:"icon_style"`
 }
 
-const TestTable = "audits_test1"
+const TestTable1 = "groups"
+const TestTable2 = "categories"
+const TestTable3 = "audits_test1"
 const DeleteAllTable = "audits_test2"
 const TestAuditTable = "audits"
 
-type TestParam struct {
-	Name     string  `json:"name"`
-	Desc     string  `json:"desc"`
-	Url      string  `json:"url"`
-	Priority int     `json:"priority"`
-	Cost     float64 `json:"cost"`
-}
+// TODO: records for insert and updates: audits, groups, categories
+
+// TODO: update and delete params (ids, queryParams)
 
 const UserId = "085f48c5-8763-4e22-a1c6-ac1a68ba07de"
 
@@ -48,27 +47,34 @@ var TestUserInfo = UserInfoType{
 	Lastname:  "Akindele",
 	Token:     "",
 	Expire:    0,
-	Role:     "TBD",
+	Role:      "TBD",
+}
+
+// TODO: audit-records
+
+type TestParam struct {
+	Name     string  `json:"name" mcorm:"name"`
+	Desc     string  `json:"desc" mcorm:"desc"`
+	Url      string  `json:"url" mcorm:"url"`
+	Priority int     `json:"priority" mcorm:"priority"`
+	Cost     float64 `json:"cost" mcorm:"cost"`
 }
 
 var Recs = TestParam{Name: "Abi", Desc: "Testing only", Url: "localhost:9000", Priority: 1, Cost: 1000.00}
 var TableRecords, _ = DataToValueParam(Recs)
 
-// NewRecs fmt.Println("table-records-json", string(tableRecords))
 var NewRecs = TestParam{Name: "Abi Akindele", Desc: "Testing only - updated", Url: "localhost:9900", Priority: 1, Cost: 2000.00}
 var NewTableRecords, _ = DataToValueParam(NewRecs)
-
-//fmt.Println("new-table-records-json", string(newTableRecords))
-//var ReadP = map[string][]string{"keywords": {"lagos", "nigeria", "ghana", "accra"}}
-//var ReadParams, _ = json.Marshal(ReadP)
 
 var TestCrudParamOptions = CrudOptionsType{
 	AuditTable:    "audits",
 	UserTable:     "users",
+	ProfileTable:  "profiles",
 	ServiceTable:  "services",
 	AccessTable:   "access_keys",
 	VerifyTable:   "verify_users",
 	RoleTable:     "roles",
+	LogCrud:       true,
 	LogCreate:     true,
 	LogUpdate:     true,
 	LogDelete:     true,
@@ -81,10 +87,10 @@ var TestCrudParamOptions = CrudOptionsType{
 
 // CreateRecordA create record(s)
 var CreateRecordA = Group{
-	Name:  "services",
+	Name: "services",
 }
 var CreateRecordB = Category{
-	Name:  "services",
+	Name: "services",
 }
 var valParam1, _ = DataToValueParam(CreateRecordA)
 var valParam2, _ = DataToValueParam(CreateRecordB)
@@ -137,7 +143,7 @@ var UpdateRecordById = UpdateRecordType{
 }
 
 var UpdateRecordByParam = Group{
-	Name:     "services3",
+	Name: "services3",
 }
 
 var UpdateIds = []string{"6900d9f9-2ceb-450f-9a9e-527eb66c962f", "122d0f0e-3111-41a5-9103-24fa81004550"}
@@ -180,5 +186,5 @@ var GetParams = QueryParamType{
 // DeleteIds delete record(s) by ids & params
 var DeleteIds = []string{"dba4adbb-4482-4f3d-bb05-0db80c30876b", "02f83bc1-8fa3-432a-8432-709f0df3f3b0"}
 var DeleteParams = QueryParamType{
-	
+
 }
