@@ -211,6 +211,7 @@ func (crud Crud) UpdateByIds(model interface{}, rec interface{}) mcresponse.Resp
 		})
 }
 
+// UpdateByParam method updates record(s) by queryParams(where-conditions)
 func (crud Crud) UpdateByParam(model interface{}, rec interface{}) mcresponse.ResponseMessage {
 	if crud.QueryParams == nil {
 		return mcresponse.GetResMessage("paramsError",
@@ -224,6 +225,34 @@ func (crud Crud) UpdateByParam(model interface{}, rec interface{}) mcresponse.Re
 		// get current records
 		getRes = crud.GetByParam(model)
 	}
+	// compute where-query-params
+	qString, qFields, qValues, qErr := crud.ComputeWhereQuery()
+	if qErr != nil {
+		return mcresponse.GetResMessage("paramsError",
+			mcresponse.ResponseMessageOptions{
+				Message: fmt.Sprintf("%v", qErr.Error()),
+				Value:   nil,
+			})
+	}
+	// validate query-fields, should match the model-underscore fields
+	sFields, _, sErr := StructToFieldValues(model)
+	if sErr != nil {
+		return mcresponse.GetResMessage("paramsError",
+			mcresponse.ResponseMessageOptions{
+				Message: fmt.Sprintf("%v", sErr.Error()),
+				Value:   nil,
+			})
+	}
+	for _, field := range qFields {
+		if !ArrayStringContains(sFields, field) {
+			return mcresponse.GetResMessage("paramsError",
+				mcresponse.ResponseMessageOptions{
+					Message: fmt.Sprintf("Query (where) field %v is not a valid model/table-field", field),
+					Value:   nil,
+				})
+		}
+	}
+
 	// convert struct to map to save all fields (including zero-value fields)
 	mapRec, err := StructToCaseUnderscoreMap(rec)
 	if err != nil {
@@ -241,7 +270,7 @@ func (crud Crud) UpdateByParam(model interface{}, rec interface{}) mcresponse.Re
 		}
 		upRec[k] = v
 	}
-	result := crud.GormDb.Model(&model).Where(crud.QueryParams).Updates(upRec)
+	result := crud.GormDb.Model(&model).Where(qString, qValues...).Updates(upRec)
 	if result.Error != nil {
 		return mcresponse.GetResMessage("updateError",
 			mcresponse.ResponseMessageOptions{
@@ -276,22 +305,23 @@ func (crud Crud) UpdateByParam(model interface{}, rec interface{}) mcresponse.Re
 		})
 }
 
+// Update method, for multiple records-update
 func (crud Crud) Update(model interface{}, recs interface{}) mcresponse.ResponseMessage {
 	// validate recs as slice of interface/records(struct/map)
-	recsType := fmt.Sprintf("%v", reflect.TypeOf(recs).Kind())
-	switch recsType {
+	rType := fmt.Sprintf("%v", reflect.TypeOf(recs).Kind())
+	switch rType {
 	case "slice":
 		break
 	default:
 		return mcresponse.GetResMessage("paramsError",
 			mcresponse.ResponseMessageOptions{
-				Message: fmt.Sprintf("recs parameter must be of type []struct{}: %v", recsType),
+				Message: fmt.Sprintf("recs parameter must be of type []struct{}: %v", rType),
 				Value:   nil,
 			})
 	}
-	switch rType := recs.(type) {
+	switch recType := recs.(type) {
 	case []interface{}:
-		for i, val := range rType {
+		for i, val := range recType {
 			// validate each record as struct type
 			recType := fmt.Sprintf("%v", reflect.TypeOf(val).Kind())
 			switch recType {
@@ -308,7 +338,7 @@ func (crud Crud) Update(model interface{}, recs interface{}) mcresponse.Response
 	default:
 		return mcresponse.GetResMessage("paramsError",
 			mcresponse.ResponseMessageOptions{
-				Message: fmt.Sprintf("rec parameter must be of type []struct{}: %v", rType),
+				Message: fmt.Sprintf("rec parameter must be of type []struct{}: %v", recType),
 				Value:   nil,
 			})
 	}
@@ -330,7 +360,7 @@ func (crud Crud) Update(model interface{}, recs interface{}) mcresponse.Response
 		getRes = crud.GetByIds(model)
 	}
 
-	// TODO: perform batch updates | transactional
+	// perform multiple updates | TODO: transactional
 	var result *gorm.DB
 	resultCount := 0
 	for _, record := range recs.([]interface{}) {
@@ -343,12 +373,13 @@ func (crud Crud) Update(model interface{}, recs interface{}) mcresponse.Response
 					Value:   nil,
 				})
 		}
-		// TODO: destruct id and other-fields from update-record (mapRec)
+		// destruct/exclude id from update-record (mapRec)
 		var id string
 		upRec := map[string]interface{}{}
 		for k, v := range mapRec {
 			if k == "id" {
-				id = k
+				idVal, _ := v.(string)
+				id = idVal
 				continue
 			}
 			upRec[k] = v

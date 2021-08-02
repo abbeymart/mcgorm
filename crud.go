@@ -334,3 +334,25 @@ func (crud *Crud) GetRecords(modelRef interface{}) mcresponse.ResponseMessage {
 	}
 	return crud.GetAll(modelRef)
 }
+
+// ComputeWhereQuery method extracts query-fields and associated values
+func (crud *Crud) ComputeWhereQuery() (qString string, qFields []string, qValues []interface{}, qErr error) {
+	// transform queryParams to underscore map[string]interface{}
+	mapUnderscore, err := MapToUnderscoreMap(crud.QueryParams)
+	if err != nil {
+		return "", nil, nil, err
+	}
+	// compute query-fields, query-string and associated values
+	keyCount := 0
+	recLen := len(mapUnderscore)
+	for key, val := range mapUnderscore {
+		keyCount++
+		qString += fmt.Sprintf("%v = ?", key)
+		if recLen > 1 && keyCount < recLen {
+			qString += fmt.Sprintf(", ")
+		}
+		qFields = append(qFields, key)
+		qValues = append(qValues, val)
+	}
+	return qString, qFields, qValues, nil
+}

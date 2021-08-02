@@ -206,8 +206,24 @@ func StructToCaseUnderscoreMap(rec interface{}) (map[string]interface{}, error) 
 	return caseUnderscoreMapData, nil
 }
 
+// MapToUnderscoreMap converts map-fields to underscore
+func MapToUnderscoreMap(rec interface{}) (map[string]interface{}, error) {
+	// validate recs as map type
+	recMap, ok := rec.(map[string]interface{})
+	if !ok || recMap == nil {
+		return nil, errors.New(fmt.Sprintf("rec parameter must be of type struct{}"))
+	}
+
+	underscoreMapData := map[string]interface{}{}
+	// compose underscoreMapData
+	for key, val := range recMap {
+		underscoreMapData[govalidator.CamelCaseToUnderscore(key)] = val
+	}
+	return underscoreMapData, nil
+}
+
 // StructToFieldValues converts struct to record fields(underscore) and associated values (columns and values)
-func StructToFieldValues(rec interface{}, tag string) ([]string, []interface{}, error) {
+func StructToFieldValues(rec interface{}) ([]string, []interface{}, error) {
 	// validate recs as struct{} type
 	recType := fmt.Sprintf("%v", reflect.TypeOf(rec).Kind())
 	switch recType {
@@ -230,7 +246,7 @@ func StructToFieldValues(rec interface{}, tag string) ([]string, []interface{}, 
 	return tableFields, fieldValues, nil
 }
 
-// ArrayMapToStruct converts []map to []struct/model-type
+// ArrayMapToStruct converts []map/actParams to []struct/model-type
 func ArrayMapToStruct(actParams ActionParamsType, recs interface{}) (interface{}, error) {
 	// validate recs as slice / []struct{} type
 	recsType := fmt.Sprintf("%v", reflect.TypeOf(recs).Kind())

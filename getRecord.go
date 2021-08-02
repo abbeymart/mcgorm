@@ -180,6 +180,7 @@ func (crud Crud) GetByIds(modelRef interface{}) mcresponse.ResponseMessage {
 		})
 }
 
+// GetByParam method query records by queryParams (where-condition)
 func (crud Crud) GetByParam(modelRef interface{}) mcresponse.ResponseMessage {
 	if crud.QueryParams == nil {
 		return mcresponse.GetResMessage("paramsError",
@@ -188,8 +189,36 @@ func (crud Crud) GetByParam(modelRef interface{}) mcresponse.ResponseMessage {
 				Value:   nil,
 			})
 	}
+	// compute where-query-params
+	qString, qFields, qValues, qErr := crud.ComputeWhereQuery()
+	if qErr != nil {
+		return mcresponse.GetResMessage("paramsError",
+			mcresponse.ResponseMessageOptions{
+				Message: fmt.Sprintf("%v", qErr.Error()),
+				Value:   nil,
+			})
+	}
+	// validate query-fields, should match the model-underscore fields
+	sFields, _, sErr := StructToFieldValues(modelRef)
+	if sErr != nil {
+		return mcresponse.GetResMessage("paramsError",
+			mcresponse.ResponseMessageOptions{
+				Message: fmt.Sprintf("%v", sErr.Error()),
+				Value:   nil,
+			})
+	}
+	for _, field := range qFields {
+		if !ArrayStringContains(sFields, field) {
+			return mcresponse.GetResMessage("paramsError",
+				mcresponse.ResponseMessageOptions{
+					Message: fmt.Sprintf("Query (where) field %v is not a valid model/table-field", field),
+					Value:   nil,
+				})
+		}
+	}
+
 	// perform get-query
-	result := crud.GormDb.Limit(crud.Limit).Offset(crud.Skip).Where(crud.QueryParams).Find(&modelRef)
+	result := crud.GormDb.Limit(crud.Limit).Offset(crud.Skip).Where(qString, qValues...).Find(&modelRef)
 	if result.Error != nil {
 		errMsg := fmt.Sprintf("%v", result.Error.Error())
 		return mcresponse.GetResMessage("readError",

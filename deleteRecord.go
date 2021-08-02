@@ -98,6 +98,7 @@ func (crud Crud) DeleteByIds(modelRef interface{}) mcresponse.ResponseMessage {
 		})
 }
 
+// DeleteByParam method deletes records by queryParams (where-conditions)
 func (crud Crud) DeleteByParam(modelRef interface{}) mcresponse.ResponseMessage {
 	if crud.QueryParams == nil {
 		return mcresponse.GetResMessage("paramsError",
@@ -111,8 +112,36 @@ func (crud Crud) DeleteByParam(modelRef interface{}) mcresponse.ResponseMessage 
 		// get current records
 		getRes = crud.GetByParam(modelRef)
 	}
+	// compute where-query-params
+	qString, qFields, qValues, qErr := crud.ComputeWhereQuery()
+	if qErr != nil {
+		return mcresponse.GetResMessage("paramsError",
+			mcresponse.ResponseMessageOptions{
+				Message: fmt.Sprintf("%v", qErr.Error()),
+				Value:   nil,
+			})
+	}
+	// validate query-fields, should match the model-underscore fields
+	sFields, _, sErr := StructToFieldValues(modelRef)
+	if sErr != nil {
+		return mcresponse.GetResMessage("paramsError",
+			mcresponse.ResponseMessageOptions{
+				Message: fmt.Sprintf("%v", sErr.Error()),
+				Value:   nil,
+			})
+	}
+	for _, field := range qFields {
+		if !ArrayStringContains(sFields, field) {
+			return mcresponse.GetResMessage("paramsError",
+				mcresponse.ResponseMessageOptions{
+					Message: fmt.Sprintf("Query (where) field %v is not a valid model/table-field", field),
+					Value:   nil,
+				})
+		}
+	}
+
 	// perform crud-delete task
-	result := crud.GormDb.Where(crud.QueryParams).Unscoped().Delete(&modelRef)
+	result := crud.GormDb.Where(qString, qValues...).Unscoped().Delete(&modelRef)
 	if result.Error != nil {
 		return mcresponse.GetResMessage("deleteError",
 			mcresponse.ResponseMessageOptions{
