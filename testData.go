@@ -48,7 +48,7 @@ var TestUserInfo = UserInfoType{
 	Role:      "TBD",
 }
 
-// TODO: audit-logs records for create / update / delete / read log-types
+// audit-logs records for create / update / delete / read log-
 
 type AuditCreateRecordType struct {
 	Name     string  `json:"name" mcorm:"name"`
@@ -119,54 +119,89 @@ var TestCrudParamOptions = CrudOptionsType{
 
 // TODO: create/update, get & delete records for groups & categories tables
 
-// CreateRecordA create record(s)
-var CreateRecordA = Group{
-	Name: "services",
+// create record(s)
+
+var GroupCreateRec1 = ActionParamType{
+	"name": "services",
 }
-var CreateRecordB = Category{
-	Name: "services",
+var GroupCreateRec2 = ActionParamType{
+	"name": "services",
 }
-var valParam1, _ = DataToValueParam(CreateRecordA)
-var valParam2, _ = DataToValueParam(CreateRecordB)
-var CreateActionParams = ActionParamsType{
-	valParam1,
-	valParam2,
+
+var GroupUpdateRec1 = ActionParamType{
+	"name": "services",
+}
+var GroupUpdateRec2 = ActionParamType{
+	"name": "services",
+}
+
+var CategoryCreateRec1 = ActionParamType{
+	"name": "services",
+}
+
+var CategoryCreateRec2 = ActionParamType{
+	"name": "services",
+}
+
+var CategoryUpdateRec1 = ActionParamType{
+	"name": "services",
+}
+
+var CategoryUpdateRec2 = ActionParamType{
+	"name": "services",
+}
+
+var GroupCreateActionParams = ActionParamsType{
+	GroupCreateRec1,
+	GroupCreateRec2,
+}
+
+var CategoryCreateActionParams = ActionParamsType{
+	CategoryCreateRec1,
+	CategoryCreateRec2,
 }
 
 // TODO: update and delete params (ids, queryParams)
 
-var UpdateRecordById = AuditUpdateRecordType{
-	TableName:     "services2",
-	LogRecords:    upTableRecords,
-	NewLogRecords: NewTableRecords,
-	LogBy:         UserId,
-	LogType:       UpdateLog,
-	LogAt:         time.Now(),
+var GroupUpdateRecordById = ActionParamType{
+	"name":     "services2",
 }
 
-var UpdateRecordByParam = Group{
-	Name: "services3",
+var CategoryUpdateRecordById = ActionParamType{
+	"name":     "services2",
+}
+
+var GroupUpdateRecordByParam = ActionParamType{
+	"name":     "services2",
+}
+
+var CategoryUpdateRecordByParam = ActionParamType{
+	"name":     "services2",
+}
+
+var GroupUpdateIds = []string{"6900d9f9-2ceb-450f-9a9e-527eb66c962f", "122d0f0e-3111-41a5-9103-24fa81004550"}
+var GroupUpdateParams = QueryParamType{
+}
+
+var CategoryUpdateIds = []string{"6900d9f9-2ceb-450f-9a9e-527eb66c962f", "122d0f0e-3111-41a5-9103-24fa81004550"}
+var CategoryUpdateParams = QueryParamType{
 }
 
 var UpdateIds = []string{"6900d9f9-2ceb-450f-9a9e-527eb66c962f", "122d0f0e-3111-41a5-9103-24fa81004550"}
 var UpdateParams = QueryParamType{
 }
 
-var updateRec1, _ = DataToValueParam(UpdateRecordA)
-var updateRec2, _ = DataToValueParam(UpdateRecordB)
-var updateRecId, _ = DataToValueParam(UpdateRecordById)
-var updateRecParam, _ = DataToValueParam(UpdateRecordByParam)
-
-var UpdateActionParams = ActionParamsType{
-	updateRec1,
-	updateRec2,
+var GroupUpdateActionParams = ActionParamsType{
+	GroupUpdateRec1,
+	GroupUpdateRec2,
 }
 
-var UpdateActionParamsById = ActionParamsType{
-	updateRecId,
+var GroupUpdateActionParamsById = ActionParamsType{
+	GroupUpdateRecordById,
 }
-var UpdateActionParamsByParam = ActionParamsType{
-	updateRecParam,
+var GroupUpdateActionParamsByParam = ActionParamsType{
+	GroupUpdateRecordByParam,
+	GroupUpdateRecordByParam,
 }
 
 // GetRecordType get record(s)
