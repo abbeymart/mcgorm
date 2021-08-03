@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+// Models
+
 type Group struct {
 	BaseModelType
 	Name string `json:"name" gorm:"unique" mcorm:"name"`
@@ -26,9 +28,9 @@ type Category struct {
 	IconStyle string    `json:"iconStyle" mcorm:"icon_style"`
 }
 
-const TestTable1 = "groups"
-const TestTable2 = "categories"
-const TestTable3 = "audits_test1"
+const GroupTable = "groups"
+const CategoryTable = "categories"
+const AuditTable = "audits"
 const DeleteAllTable = "audits_test2"
 const TestAuditTable = "audits"
 
@@ -96,7 +98,6 @@ var UpdateRecordB = AuditUpdateRecordType{
 	LogAt:         time.Now(),
 }
 
-
 var TestCrudParamOptions = CrudOptionsType{
 	AuditTable:    "audits",
 	UserTable:     "users",
@@ -132,9 +133,7 @@ var CreateActionParams = ActionParamsType{
 	valParam2,
 }
 
-
 // TODO: update and delete params (ids, queryParams)
-
 
 var UpdateRecordById = AuditUpdateRecordType{
 	TableName:     "services2",
