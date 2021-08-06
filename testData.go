@@ -161,7 +161,7 @@ var CategoryCreateActionParams = ActionParamsType{
 	CategoryCreateRec2,
 }
 
-// TODO: update and delete params (ids, queryParams)
+// TODO: update and delete params (ids, queryParams) | set-values after create-tasks
 
 var GroupUpdateRecordById = ActionParamType{
 	"name":     "services2",
@@ -187,10 +187,6 @@ var CategoryUpdateIds = []string{"6900d9f9-2ceb-450f-9a9e-527eb66c962f", "122d0f
 var CategoryUpdateParams = QueryParamType{
 }
 
-var UpdateIds = []string{"6900d9f9-2ceb-450f-9a9e-527eb66c962f", "122d0f0e-3111-41a5-9103-24fa81004550"}
-var UpdateParams = QueryParamType{
-}
-
 var GroupUpdateActionParams = ActionParamsType{
 	GroupUpdateRec1,
 	GroupUpdateRec2,
@@ -200,7 +196,6 @@ var GroupUpdateActionParamsById = ActionParamsType{
 	GroupUpdateRecordById,
 }
 var GroupUpdateActionParamsByParam = ActionParamsType{
-	GroupUpdateRecordByParam,
 	GroupUpdateRecordByParam,
 }
 
@@ -216,8 +211,13 @@ type GetRecordType struct {
 }
 
 // GetIds get by ids & params
-var GetIds = []string{"6900d9f9-2ceb-450f-9a9e-527eb66c962f", "122d0f0e-3111-41a5-9103-24fa81004550"}
-var GetParams = QueryParamType{
+
+var GroupGetIds = []string{"6900d9f9-2ceb-450f-9a9e-527eb66c962f", "122d0f0e-3111-41a5-9103-24fa81004550"}
+var GroupGetParams = QueryParamType{
+}
+
+var CategoryGetIds = []string{"6900d9f9-2ceb-450f-9a9e-527eb66c962f", "122d0f0e-3111-41a5-9103-24fa81004550"}
+var CategoryGetParams = QueryParamType{
 }
 
 // DeleteIds delete record(s) by ids & params
