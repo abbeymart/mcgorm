@@ -43,7 +43,7 @@ type AuditLogger interface {
 	AuditLog(logType, userId string, options AuditLogOptionsType) (mcresponse.ResponseMessage, error)
 }
 type CreateLogger interface {
-	CreateLog(table string, logRecords interface{}, userId string) (mcresponse.ResponseMessage, error)
+	CreateLog(tableName string, logRecords interface{}, userId string) (mcresponse.ResponseMessage, error)
 }
 type UpdateLogger interface {
 	UpdateLog(tableName string, logRecords interface{}, newLogRecords interface{}, userId string) (mcresponse.ResponseMessage, error)
@@ -60,7 +60,7 @@ type AccessLogger interface {
 }
 
 //type AuditCrudLogger interface {
-//	CreateLog(table string, LogRecords interface{}, userId string) (mcresponse.ResponseMessage, error)
+//	CreateLog(tableName string, LogRecords interface{}, userId string) (mcresponse.ResponseMessage, error)
 //	UpdateLog(TableName string, LogRecords interface{}, NewLogRecords interface{}, userId string) (mcresponse.ResponseMessage, error)
 //	ReadLog(TableName string, LogRecords interface{}, userId string) (mcresponse.ResponseMessage, error)
 //	DeleteLog(TableName string, LogRecords interface{}, userId string) (mcresponse.ResponseMessage, error)
@@ -112,8 +112,10 @@ func (log LogParam) AuditLog(logType, userId string, options AuditLogOptionsType
 		tableName     = ""
 		logRecords    interface{}
 		newLogRecords interface{}
-		result        *gorm.DB
+		//result        *gorm.DB
 	)
+
+	audit := Audit{}
 
 	// log-cases
 	switch logType {
@@ -148,14 +150,13 @@ func (log LogParam) AuditLog(logType, userId string, options AuditLogOptionsType
 				}), errors.New(errorMessage)
 		}
 		// perform crud action
-		audit := Audit{
+		audit = Audit{
 			TableName:  tableName,
 			LogRecords: logRecords,
 			LogType:    logType,
 			LogBy:      logBy,
 			LogAt:      time.Now(),
 		}
-		result = log.AuditDb.Create(&audit)
 	case UpdateLog:
 		// set params
 		tableName = options.TableName
@@ -195,7 +196,7 @@ func (log LogParam) AuditLog(logType, userId string, options AuditLogOptionsType
 				}), errors.New(errorMessage)
 		}
 		// perform crud action
-		audit := Audit{
+		audit = Audit{
 			TableName:     tableName,
 			LogRecords:    logRecords,
 			NewLogRecords: newLogRecords,
@@ -203,7 +204,6 @@ func (log LogParam) AuditLog(logType, userId string, options AuditLogOptionsType
 			LogBy:         logBy,
 			LogAt:         time.Now(),
 		}
-		result = log.AuditDb.Create(&audit)
 	case GetLog, ReadLog:
 		// set params
 		tableName = options.TableName
@@ -235,14 +235,13 @@ func (log LogParam) AuditLog(logType, userId string, options AuditLogOptionsType
 				}), errors.New(errorMessage)
 		}
 		// perform crud action
-		audit := Audit{
+		audit = Audit{
 			TableName:  tableName,
 			LogRecords: logRecords,
 			LogType:    logType,
 			LogBy:      logBy,
 			LogAt:      time.Now(),
 		}
-		result = log.AuditDb.Create(&audit)
 	case DeleteLog, RemoveLog:
 		// set params
 		tableName = options.TableName
@@ -274,14 +273,13 @@ func (log LogParam) AuditLog(logType, userId string, options AuditLogOptionsType
 				}), errors.New(errorMessage)
 		}
 		// perform crud action
-		audit := Audit{
+		audit = Audit{
 			TableName:  tableName,
 			LogRecords: logRecords,
 			LogType:    logType,
 			LogBy:      logBy,
 			LogAt:      time.Now(),
 		}
-		result = log.AuditDb.Create(&audit)
 	case LoginLog:
 		// set params
 		tableName = options.TableName
@@ -313,14 +311,13 @@ func (log LogParam) AuditLog(logType, userId string, options AuditLogOptionsType
 				}), errors.New(errorMessage)
 		}
 		// perform crud action
-		audit := Audit{
+		audit = Audit{
 			TableName:  tableName,
 			LogRecords: logRecords,
 			LogType:    logType,
 			LogBy:      logBy,
 			LogAt:      time.Now(),
 		}
-		result = log.AuditDb.Create(&audit)
 	case LogoutLog:
 		// set params
 		tableName = options.TableName
@@ -352,14 +349,13 @@ func (log LogParam) AuditLog(logType, userId string, options AuditLogOptionsType
 				}), errors.New(errorMessage)
 		}
 		// perform crud action
-		audit := Audit{
+		audit = Audit{
 			TableName:  tableName,
 			LogRecords: logRecords,
 			LogType:    logType,
 			LogBy:      logBy,
 			LogAt:      time.Now(),
 		}
-		result = log.AuditDb.Create(&audit)
 	default:
 		return mcresponse.GetResMessage("logError",
 			mcresponse.ResponseMessageOptions{
@@ -368,9 +364,12 @@ func (log LogParam) AuditLog(logType, userId string, options AuditLogOptionsType
 			}), errors.New("unknown log type and/or incomplete log information")
 	}
 
+	// perform audit-log-create task
+	result := log.AuditDb.Create(&audit)
+
 	// Handle error
 	if result.Error != nil {
-		errMsg := fmt.Sprintf("%v", result.Error.Error())
+		errMsg := fmt.Sprintf("Log-record create-error: %v", result.Error.Error())
 		return mcresponse.GetResMessage("logError",
 			mcresponse.ResponseMessageOptions{
 				Message: errMsg,
@@ -385,40 +384,340 @@ func (log LogParam) AuditLog(logType, userId string, options AuditLogOptionsType
 		}), nil
 }
 
-func (log LogParam) CreateLog(table string, logRecords interface{}, userId string) (mcresponse.ResponseMessage, error) {
+func (log LogParam) CreateLog(tableName string, logRecords interface{}, userId string) (mcresponse.ResponseMessage, error) {
+	// validate params
+	var errorMessage = ""
+	if tableName == "" {
+		errorMessage = "Table or Collection name is required."
+	}
+	if userId == "" {
+		if errorMessage != "" {
+			errorMessage = errorMessage + " | userId is required."
+		} else {
+			errorMessage = "userId is required."
+		}
+	}
+	if logRecords == nil {
+		if errorMessage != "" {
+			errorMessage = errorMessage + " | Created record(s) information is required."
+		} else {
+			errorMessage = "Created record(s) information is required."
+		}
+	}
+	if errorMessage != "" {
+		return mcresponse.GetResMessage("paramsError",
+			mcresponse.ResponseMessageOptions{
+				Message: errorMessage,
+				Value:   nil,
+			}), errors.New(errorMessage)
+	}
+	// perform crud action
+	audit := Audit{
+		TableName:  tableName,
+		LogRecords: logRecords,
+		LogType:    CreateLog,
+		LogBy:      userId,
+		LogAt:      time.Now(),
+	}
+	// perform audit-log-insert task
+	result := log.AuditDb.Create(&audit)
 
-	return mcresponse.GetResMessage("success", mcresponse.ResponseMessageOptions{}), nil
+	// Handle error
+	if result.Error != nil {
+		errMsg := fmt.Sprintf("Log-record create-error: %v", result.Error.Error())
+		return mcresponse.GetResMessage("logError",
+			mcresponse.ResponseMessageOptions{
+				Message: errMsg,
+				Value:   nil,
+			}), errors.New(errMsg)
+	}
+
+	return mcresponse.GetResMessage("success",
+		mcresponse.ResponseMessageOptions{
+			Message: "successful audit-log action",
+			Value:   result.RowsAffected,
+		}), nil
 }
 
 func (log LogParam) UpdateLog(tableName string, logRecords interface{}, newLogRecords interface{}, userId string) (mcresponse.ResponseMessage, error) {
+	// validate params
+	var errorMessage = ""
+	if tableName == "" {
+		errorMessage = "Table or Collection name is required."
+	}
+	if userId == "" {
+		if errorMessage != "" {
+			errorMessage = errorMessage + " | userId is required."
+		} else {
+			errorMessage = "userId is required."
+		}
+	}
+	if logRecords == nil {
+		if errorMessage != "" {
+			errorMessage = errorMessage + " | Updated record(s) information is required."
+		} else {
+			errorMessage = "Updated record(s) information is required."
+		}
+	}
+	if newLogRecords == nil {
+		if errorMessage != "" {
+			errorMessage = errorMessage + " | New/Update record(s) information is required."
+		} else {
+			errorMessage = "New/Update record(s) information is required."
+		}
+	}
+	if errorMessage != "" {
+		return mcresponse.GetResMessage("paramsError",
+			mcresponse.ResponseMessageOptions{
+				Message: errorMessage,
+				Value:   nil,
+			}), errors.New(errorMessage)
+	}
 
-	return mcresponse.GetResMessage("success", mcresponse.ResponseMessageOptions{}), nil
+	audit := Audit{
+		TableName:     tableName,
+		LogRecords:    logRecords,
+		NewLogRecords: newLogRecords,
+		LogType:       CreateLog,
+		LogBy:         userId,
+		LogAt:         time.Now(),
+	}
+	// perform audit-log-insert task
+	result := log.AuditDb.Create(&audit)
+
+	// Handle error
+	if result.Error != nil {
+		errMsg := fmt.Sprintf("Log-record create-error: %v", result.Error.Error())
+		return mcresponse.GetResMessage("logError",
+			mcresponse.ResponseMessageOptions{
+				Message: errMsg,
+				Value:   nil,
+			}), errors.New(errMsg)
+	}
+
+	return mcresponse.GetResMessage("success",
+		mcresponse.ResponseMessageOptions{
+			Message: "successful audit-log action",
+			Value:   result.RowsAffected,
+		}), nil
 }
 
 func (log LogParam) ReadLog(tableName string, logRecords interface{}, userId string) (mcresponse.ResponseMessage, error) {
+	// validate params
+	var errorMessage = ""
+	if tableName == "" {
+		errorMessage = "Table or Collection name is required."
+	}
+	if userId == "" {
+		if errorMessage != "" {
+			errorMessage = errorMessage + " | userId is required."
+		} else {
+			errorMessage = "userId is required."
+		}
+	}
+	if logRecords == nil {
+		if errorMessage != "" {
+			errorMessage = errorMessage + " | Read/Get Params/Keywords information is required."
+		} else {
+			errorMessage = "Read/Get Params/Keywords information is required."
+		}
+	}
+	if errorMessage != "" {
+		return mcresponse.GetResMessage("paramsError",
+			mcresponse.ResponseMessageOptions{
+				Message: errorMessage,
+				Value:   nil,
+			}), errors.New(errorMessage)
+	}
+	// perform crud action
+	audit := Audit{
+		TableName:  tableName,
+		LogRecords: logRecords,
+		LogType:    CreateLog,
+		LogBy:      userId,
+		LogAt:      time.Now(),
+	}
+	// perform audit-log-insert task
+	result := log.AuditDb.Create(&audit)
 
-	return mcresponse.GetResMessage("success", mcresponse.ResponseMessageOptions{}), nil
+	// Handle error
+	if result.Error != nil {
+		errMsg := fmt.Sprintf("Log-record create-error: %v", result.Error.Error())
+		return mcresponse.GetResMessage("logError",
+			mcresponse.ResponseMessageOptions{
+				Message: errMsg,
+				Value:   nil,
+			}), errors.New(errMsg)
+	}
+
+	return mcresponse.GetResMessage("success",
+		mcresponse.ResponseMessageOptions{
+			Message: "successful audit-log action",
+			Value:   result.RowsAffected,
+		}), nil
 }
 
 func (log LogParam) DeleteLog(tableName string, logRecords interface{}, userId string) (mcresponse.ResponseMessage, error) {
+	// validate params
+	var errorMessage = ""
+	if tableName == "" {
+		errorMessage = "Table or Collection name is required."
+	}
+	if userId == "" {
+		if errorMessage != "" {
+			errorMessage = errorMessage + " | userId is required."
+		} else {
+			errorMessage = "userId is required."
+		}
+	}
+	if logRecords == nil {
+		if errorMessage != "" {
+			errorMessage = errorMessage + " | Deleted record(s) information is required."
+		} else {
+			errorMessage = "Deleted record(s) information is required."
+		}
+	}
+	if errorMessage != "" {
+		return mcresponse.GetResMessage("paramsError",
+			mcresponse.ResponseMessageOptions{
+				Message: errorMessage,
+				Value:   nil,
+			}), errors.New(errorMessage)
+	}
+	// perform crud action
+	audit := Audit{
+		TableName:  tableName,
+		LogRecords: logRecords,
+		LogType:    CreateLog,
+		LogBy:      userId,
+		LogAt:      time.Now(),
+	}
+	// perform audit-log-insert task
+	result := log.AuditDb.Create(&audit)
 
-	return mcresponse.GetResMessage("success", mcresponse.ResponseMessageOptions{}), nil
+	// Handle error
+	if result.Error != nil {
+		errMsg := fmt.Sprintf("Log-record create-error: %v", result.Error.Error())
+		return mcresponse.GetResMessage("logError",
+			mcresponse.ResponseMessageOptions{
+				Message: errMsg,
+				Value:   nil,
+			}), errors.New(errMsg)
+	}
+
+	return mcresponse.GetResMessage("success",
+		mcresponse.ResponseMessageOptions{
+			Message: "successful audit-log action",
+			Value:   result.RowsAffected,
+		}), nil
 }
 
 func (log LogParam) LoginLog(logRecords interface{}, userId string, tableName string) (mcresponse.ResponseMessage, error) {
-	// default-values
+	// validate params
+	var errorMessage = ""
 	if tableName == "" {
-		tableName = "users"
+		errorMessage = "Table or Collection name is required."
+	}
+	if userId == "" {
+		if errorMessage != "" {
+			errorMessage = errorMessage + " | userId is required."
+		} else {
+			errorMessage = "userId is required."
+		}
+	}
+	if logRecords == nil {
+		if errorMessage != "" {
+			errorMessage = errorMessage + " | Login record(s) information is required."
+		} else {
+			errorMessage = "Login record(s) information is required."
+		}
+	}
+	if errorMessage != "" {
+		return mcresponse.GetResMessage("paramsError",
+			mcresponse.ResponseMessageOptions{
+				Message: errorMessage,
+				Value:   nil,
+			}), errors.New(errorMessage)
+	}
+	// perform crud action
+	audit := Audit{
+		TableName:  tableName,
+		LogRecords: logRecords,
+		LogType:    CreateLog,
+		LogBy:      userId,
+		LogAt:      time.Now(),
+	}
+	// perform audit-log-insert task
+	result := log.AuditDb.Create(&audit)
+
+	// Handle error
+	if result.Error != nil {
+		errMsg := fmt.Sprintf("Log-record create-error: %v", result.Error.Error())
+		return mcresponse.GetResMessage("logError",
+			mcresponse.ResponseMessageOptions{
+				Message: errMsg,
+				Value:   nil,
+			}), errors.New(errMsg)
 	}
 
-	return mcresponse.GetResMessage("success", mcresponse.ResponseMessageOptions{}), nil
+	return mcresponse.GetResMessage("success",
+		mcresponse.ResponseMessageOptions{
+			Message: "successful audit-log action",
+			Value:   result.RowsAffected,
+		}), nil
 }
 
 func (log LogParam) LogoutLog(logRecords interface{}, userId string, tableName string) (mcresponse.ResponseMessage, error) {
-	// default-values
+	// validate params
+	var errorMessage = ""
 	if tableName == "" {
-		tableName = "users"
+		errorMessage = "Table or Collection name is required."
+	}
+	if userId == "" {
+		if errorMessage != "" {
+			errorMessage = errorMessage + " | userId is required."
+		} else {
+			errorMessage = "userId is required."
+		}
+	}
+	if logRecords == nil {
+		if errorMessage != "" {
+			errorMessage = errorMessage + " | Logout record(s) information is required."
+		} else {
+			errorMessage = "Logout record(s) information is required."
+		}
+	}
+	if errorMessage != "" {
+		return mcresponse.GetResMessage("paramsError",
+			mcresponse.ResponseMessageOptions{
+				Message: errorMessage,
+				Value:   nil,
+			}), errors.New(errorMessage)
+	}
+	// perform crud action
+	audit := Audit{
+		TableName:  tableName,
+		LogRecords: logRecords,
+		LogType:    CreateLog,
+		LogBy:      userId,
+		LogAt:      time.Now(),
+	}
+	// perform audit-log-insert task
+	result := log.AuditDb.Create(&audit)
+
+	// Handle error
+	if result.Error != nil {
+		errMsg := fmt.Sprintf("Log-record create-error: %v", result.Error.Error())
+		return mcresponse.GetResMessage("logError",
+			mcresponse.ResponseMessageOptions{
+				Message: errMsg,
+				Value:   nil,
+			}), errors.New(errMsg)
 	}
 
-	return mcresponse.GetResMessage("success", mcresponse.ResponseMessageOptions{}), nil
+	return mcresponse.GetResMessage("success",
+		mcresponse.ResponseMessageOptions{
+			Message: "successful audit-log action",
+			Value:   result.RowsAffected,
+		}), nil
 }
